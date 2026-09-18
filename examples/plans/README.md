@@ -1,7 +1,10 @@
 # Authored Backchain adapter fixtures
 
-`braid` and `confetti` pair a request with a fixed Backchain-schema plan and a
-separate explicit execution-binding file. They are reviewable protocol fixtures:
+`braid` and `confetti` pair a request with a specification companion, a fixed
+Backchain-schema plan, and a separate explicit execution-binding file. The
+specification owns deliverables, functional requirements, NFRs, and their
+acceptance criteria; each binding carries the corresponding atomic step contract.
+They are reviewable protocol fixtures:
 the test suite submits them to the selected Backchain checkout's real
 `--package-only` validator. They demonstrate structural import and execution
 binding, not native semantic planning, dependency discovery, or convergence by a
@@ -24,13 +27,19 @@ mkdir "$DEMO/workspace"
   --prompt-file examples/braid.request.txt \
   --backchain-root /absolute/path/to/backchain \
   --repo "$DEMO/workspace" \
-  --run-dir "$DEMO/run" > "$DEMO/planning.json"
+  --run-dir "$DEMO/run" > "$DEMO/specification.json"
 
-ACTION_ID="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["action_id"])' "$DEMO/planning.json")"
+SPEC_ACTION="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["action_id"])' "$DEMO/specification.json")"
+SPEC_FILE="$DEMO/run/planning/$SPEC_ACTION.spec.json"
+mkdir -p "$(dirname "$SPEC_FILE")"
+cp examples/plans/braid.spec.json "$SPEC_FILE"
+./weave accept-spec --run-dir "$DEMO/run" --action "$SPEC_ACTION" --spec "$SPEC_FILE" > "$DEMO/planning.json"
+
+PLAN_ACTION="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["action_id"])' "$DEMO/planning.json")"
 
 ./weave accept-plan \
   --run-dir "$DEMO/run" \
-  --action "$ACTION_ID" \
+  --action "$PLAN_ACTION" \
   --plan examples/plans/braid.plan.json \
   --bindings examples/plans/braid.bindings.json
 
@@ -41,7 +50,7 @@ ACTION_ID="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1], enc
 Braid is command-only, so `run` reaches `status=complete` after its two joins.
 The final `next` is a cold-recovery check; it does not rerun accepted commands.
 
-To use Confetti, substitute `confetti` in all three fixture paths. Its seed is a
+To use Confetti, substitute `confetti` in all four fixture paths. Its seed is a
 command, then the script returns each terminal prompt packet. Have the host carry
 out that packet in its returned workspace (`$DEMO/workspace` for these commands),
 write the returned `result_file`, and

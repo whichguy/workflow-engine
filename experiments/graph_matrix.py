@@ -2,8 +2,9 @@
 """Run bounded, reproducible black-box frontier graph experiments.
 
 The experiment records a seed, compact graph, public CLI trace, runtime hashes,
-and observed latency/packet-size metrics.  It uses temporary workspaces per
-case and makes no claim that a synthetic oracle control mutated the real engine.
+requirement-contract IDs, and observed latency/packet-size metrics. It uses
+temporary workspaces per case and makes no claim that a synthetic oracle control
+mutated the real engine.
 """
 
 from __future__ import annotations
@@ -48,11 +49,34 @@ def _graph_view(document: dict[str, Any]) -> dict[str, Any]:
         {"id": step["id"], "kind": step["kind"], "needs": step["needs"]}
         for step in document["steps"]
     ]
+    specification = document.get("specification")
+    specification_view: dict[str, Any] | None = None
+    if isinstance(specification, dict):
+        specification_view = {
+            "version": specification.get("version"),
+            "deliverables": [
+                item.get("id")
+                for item in specification.get("deliverables", [])
+                if isinstance(item, dict)
+            ],
+            "functional_requirements": [
+                item.get("id")
+                for item in specification.get("functional_requirements", [])
+                if isinstance(item, dict)
+            ],
+            "nfrs": [
+                item.get("id")
+                for item in specification.get("nfrs", [])
+                if isinstance(item, dict)
+            ],
+        }
     return {
+        "workflow_version": document.get("version"),
         "name": document["name"],
         "nodes": len(steps),
         "edges": sum(len(step["needs"]) for step in steps),
         "steps": steps,
+        "specification": specification_view,
     }
 
 

@@ -18,6 +18,8 @@ import unittest
 from pathlib import Path
 from typing import Any, Sequence
 
+from spec_fixtures import specified
+
 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = Path(
@@ -118,22 +120,24 @@ class VerifierOutcomeTests(unittest.TestCase):
         self._new_case(label)
         self.workflow.write_text(
             json.dumps(
-                {
-                    "version": 1,
-                    "name": label,
-                    "goal": "Record verifier outcomes before advancing the workflow.",
-                    "steps": [
-                        {
-                            "id": "review",
-                            "kind": kind,
-                            "needs": [],
-                            "prompt": "Write only review.txt.",
-                            "outputs": ["review.txt"],
-                            "verify": [list(check) for check in checks],
-                            "timeout_seconds": timeout_seconds,
-                        }
-                    ],
-                },
+                specified(
+                    {
+                        "version": 1,
+                        "name": label,
+                        "goal": "Record verifier outcomes before advancing the workflow.",
+                        "steps": [
+                            {
+                                "id": "review",
+                                "kind": kind,
+                                "needs": [],
+                                "prompt": "Write only review.txt.",
+                                "outputs": ["review.txt"],
+                                "verify": [list(check) for check in checks],
+                                "timeout_seconds": timeout_seconds,
+                            }
+                        ],
+                    }
+                ),
                 indent=2,
             ),
             encoding="utf-8",

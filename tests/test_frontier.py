@@ -18,6 +18,8 @@ import tempfile
 import unittest
 from typing import Any, Iterable
 
+from spec_fixtures import planning_fixture, specified
+
 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "skills" / "workflow" / "scripts" / "workflow"
@@ -81,18 +83,42 @@ class FrontierCliTest(unittest.TestCase):
         self.assertEqual(packet.get("status"), "error")
         return packet
 
+    def accept_specification(
+        self, packet: dict[str, Any], specification: dict[str, Any]
+    ) -> dict[str, Any]:
+        spec_file = Path(str(packet["spec_file"]))
+        spec_file.parent.mkdir(parents=True, exist_ok=True)
+        spec_file.write_text(json.dumps(specification), encoding="utf-8")
+        callback = list(packet["next_argv"])
+        self.assertEqual(packet["allowed_operations"]["accept_spec"], callback)
+        self.assertEqual(callback[-2], "--spec")
+        self.assertEqual(callback[-1], str(spec_file))
+        result = subprocess.run(
+            [str(argument) for argument in callback],
+            cwd=self.base,
+            text=True,
+            capture_output=True,
+            timeout=15,
+            check=False,
+        )
+        accepted = self.decode(result)
+        self.assertEqual(result.returncode, 0, accepted)
+        return accepted
+
     def write_workflow(self, document: dict[str, Any]) -> Path:
         self.workflow.write_text(json.dumps(document, indent=2, sort_keys=True), encoding="utf-8")
         return self.workflow
 
     @staticmethod
     def document(steps: list[dict[str, Any]], name: str = "frontier-test") -> dict[str, Any]:
-        return {
-            "version": 1,
-            "name": name,
-            "goal": "Prove durable dependency-aware frontier execution.",
-            "steps": steps,
-        }
+        return specified(
+            {
+                "version": 1,
+                "name": name,
+                "goal": "Prove durable dependency-aware frontier execution.",
+                "steps": steps,
+            }
+        )
 
     @staticmethod
     def agent(
@@ -289,7 +315,7 @@ class FrontierCliTest(unittest.TestCase):
 
     # ---- Compatibility and declaration policy -------------------------
 
-    def test_v1_without_frontier_options_keeps_the_single_packet_contract(self) -> None:
+    def test_serial_without_frontier_options_keeps_the_single_packet_contract(self) -> None:
         """The opt-in frontier never changes an existing serial run."""
         initial = self.init(
             self.document(
@@ -366,13 +392,12 @@ class FrontierCliTest(unittest.TestCase):
         request = "Build a four-step command braid from this exact request.\n"
         request_file = self.base / "frontier-request.txt"
         request_file.write_text(request, encoding="utf-8")
-        planning = self.call(
+        specification_packet = self.call(
             "init", "--prompt-file", request_file, "--backchain-root", BACKCHAIN,
             "--repo", self.repo, "--run-dir", self.run, "--max-active", 2,
             "--shared-workspace-disjoint",
         )
-        self.assertEqual(planning["original_goal"], request)
-        planning_action = planning["action_id"]
+        self.assertEqual(specification_packet["original_goal"], request)
         before = self.read_state()
         expected_policy = {
             "mode": "shared-workspace-disjoint",
@@ -459,6 +484,10 @@ class FrontierCliTest(unittest.TestCase):
                 "outputs": ["joined.txt"],
             },
         }
+        specification, bindings = planning_fixture(plan, bindings)
+        planning = self.accept_specification(specification_packet, specification)
+        self.assertEqual(planning["kind"], "planning")
+        planning_action = planning["action_id"]
         plan_file = self.base / "frontier-plan.json"
         bindings_file = self.base / "frontier-bindings.json"
         plan_file.write_text(json.dumps(plan), encoding="utf-8")

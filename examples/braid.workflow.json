@@ -1,56 +1,62 @@
 {
-  "version": 1,
+  "version": 2,
   "name": "braid",
   "goal": "Build source evidence, join it, fan out to a draft and check, then join those results.",
+  "specification": {
+    "version": 1,
+    "goal": "Build source evidence, join it, fan out to a draft and check, then join those results.",
+    "deliverables": [
+      {"id": "D-extract", "description": "Extracted source facts.", "requirements": ["FR-extract"]},
+      {"id": "D-classify", "description": "A classification of the source.", "requirements": ["FR-classify"]},
+      {"id": "D-note", "description": "A checked published note.", "requirements": ["FR-note"]}
+    ],
+    "functional_requirements": [
+      {"id": "FR-extract", "description": "The two source lines are extracted in source order.", "acceptance": ["extract.txt equals alpha,beta"]},
+      {"id": "FR-classify", "description": "The source line count is classified.", "acceptance": ["classify.json records lines: 2"]},
+      {"id": "FR-note", "description": "The published note contains the consolidated facts and check result.", "acceptance": ["published.md includes alpha,beta / 2 and Checked: PASS"]}
+    ],
+    "nfrs": [
+      {"id": "NFR-evidence", "description": "Each branch writes separate accepted evidence before publication.", "acceptance": ["seed, extraction, classification, draft, check, and published artifacts remain separately inspectable"], "scope": "all"}
+    ],
+    "assumptions": [],
+    "out_of_scope": [],
+    "unresolved": []
+  },
   "steps": [
     {
-      "id": "seed",
-      "kind": "command",
-      "needs": [],
-      "argv": ["python3", "-c", "from pathlib import Path; Path('seed.txt').write_text('alpha\\nbeta\\n')"],
-      "outputs": ["seed.txt"]
+      "id": "seed", "kind": "command", "needs": [],
+      "argv": ["python3", "-c", "from pathlib import Path; Path('seed.txt').write_text('alpha\\nbeta\\n')"], "outputs": ["seed.txt"],
+      "contract": {"role": "setup", "deliverables": ["D-extract", "D-classify", "D-note"], "requirements": [], "verifies": [], "ready_when": ["no prerequisite evidence is required"], "done_when": ["seed.txt contains the immutable source note"], "shared_reason": "One accepted source note supplies the extraction, classification, and resulting publication."}
     },
     {
-      "id": "extract",
-      "kind": "command",
-      "needs": ["seed"],
-      "argv": ["python3", "-c", "from pathlib import Path; Path('extract.txt').write_text(','.join(Path('seed.txt').read_text().splitlines()))"],
-      "outputs": ["extract.txt"]
+      "id": "extract", "kind": "command", "needs": ["seed"],
+      "argv": ["python3", "-c", "from pathlib import Path; Path('extract.txt').write_text(','.join(Path('seed.txt').read_text().splitlines()))"], "outputs": ["extract.txt"],
+      "contract": {"role": "deliverable", "deliverables": ["D-extract"], "requirements": ["FR-extract"], "verifies": [], "ready_when": ["the accepted source note is available"], "done_when": ["extract.txt records the source lines in order"]}
     },
     {
-      "id": "classify",
-      "kind": "command",
-      "needs": ["seed"],
-      "argv": ["python3", "-c", "import json; from pathlib import Path; Path('classify.json').write_text(json.dumps({'lines': len(Path('seed.txt').read_text().splitlines())}))"],
-      "outputs": ["classify.json"]
+      "id": "classify", "kind": "command", "needs": ["seed"],
+      "argv": ["python3", "-c", "import json; from pathlib import Path; Path('classify.json').write_text(json.dumps({'lines': len(Path('seed.txt').read_text().splitlines())}))"], "outputs": ["classify.json"],
+      "contract": {"role": "deliverable", "deliverables": ["D-classify"], "requirements": ["FR-classify"], "verifies": [], "ready_when": ["the accepted source note is available"], "done_when": ["classify.json records the source line count"]}
     },
     {
-      "id": "consolidate",
-      "kind": "command",
-      "needs": ["extract", "classify"],
-      "argv": ["python3", "-c", "import json; from pathlib import Path; extract=Path('extract.txt').read_text(); facts=json.loads(Path('classify.json').read_text()); assert facts == {'lines': 2}; Path('consolidated.txt').write_text(extract + ' / ' + str(facts['lines']))"],
-      "outputs": ["consolidated.txt"]
+      "id": "consolidate", "kind": "command", "needs": ["extract", "classify"],
+      "argv": ["python3", "-c", "import json; from pathlib import Path; extract=Path('extract.txt').read_text(); facts=json.loads(Path('classify.json').read_text()); assert facts == {'lines': 2}; Path('consolidated.txt').write_text(extract + ' / ' + str(facts['lines']))"], "outputs": ["consolidated.txt"],
+      "contract": {"role": "integration", "deliverables": ["D-extract", "D-classify"], "requirements": [], "verifies": ["FR-extract", "FR-classify"], "ready_when": ["both accepted source branches are available"], "done_when": ["consolidated.txt records the checked combined fact"], "shared_reason": "The draft must use both independent source interpretations, so their evidence joins here."}
     },
     {
-      "id": "compose",
-      "kind": "command",
-      "needs": ["consolidate"],
-      "argv": ["python3", "-c", "from pathlib import Path; Path('draft.md').write_text('# Draft\\n' + Path('consolidated.txt').read_text() + '\\n')"],
-      "outputs": ["draft.md"]
+      "id": "compose", "kind": "command", "needs": ["consolidate"],
+      "argv": ["python3", "-c", "from pathlib import Path; Path('draft.md').write_text('# Draft\\n' + Path('consolidated.txt').read_text() + '\\n')"], "outputs": ["draft.md"],
+      "contract": {"role": "deliverable", "deliverables": ["D-note"], "requirements": ["FR-note"], "verifies": [], "ready_when": ["the accepted consolidated fact is available"], "done_when": ["draft.md contains the consolidated source fact"]}
     },
     {
-      "id": "check",
-      "kind": "command",
-      "needs": ["consolidate"],
-      "argv": ["python3", "-c", "from pathlib import Path; assert Path('consolidated.txt').read_text() == 'alpha,beta / 2'; Path('check.txt').write_text('PASS\\n')"],
-      "outputs": ["check.txt"]
+      "id": "check", "kind": "command", "needs": ["consolidate"],
+      "argv": ["python3", "-c", "from pathlib import Path; assert Path('consolidated.txt').read_text() == 'alpha,beta / 2'; Path('check.txt').write_text('PASS\\n')"], "outputs": ["check.txt"],
+      "contract": {"role": "verification", "deliverables": ["D-extract", "D-classify"], "requirements": [], "verifies": ["FR-extract", "FR-classify"], "ready_when": ["the accepted consolidated source fact is available"], "done_when": ["check.txt records a passing source-fact check"], "shared_reason": "One check verifies the two requirements that meet in the consolidated fact."}
     },
     {
-      "id": "publish",
-      "kind": "command",
-      "needs": ["compose", "check"],
-      "argv": ["python3", "-c", "from pathlib import Path; assert Path('check.txt').read_text() == 'PASS\\n'; Path('published.md').write_text(Path('draft.md').read_text() + 'Checked: PASS\\n')"],
-      "outputs": ["published.md"]
+      "id": "publish", "kind": "command", "needs": ["compose", "check"],
+      "argv": ["python3", "-c", "from pathlib import Path; assert Path('check.txt').read_text() == 'PASS\\n'; Path('published.md').write_text(Path('draft.md').read_text() + 'Checked: PASS\\n')"], "outputs": ["published.md"],
+      "contract": {"role": "release", "deliverables": ["D-extract", "D-classify", "D-note"], "requirements": [], "verifies": ["FR-note", "NFR-evidence"], "ready_when": ["the accepted draft and source-fact check are available"], "done_when": ["published.md contains the checked note"], "shared_reason": "Publication joins the drafted note with the independent source check and preserves all branch evidence."}
     }
   ]
 }

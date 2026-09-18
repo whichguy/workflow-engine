@@ -25,6 +25,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple
 
 import store
+from specification import validate_specification, validate_contracts, step_context
 
 
 class WorkflowError(RuntimeError):
@@ -34,7 +35,8 @@ class WorkflowError(RuntimeError):
 RUN_SCHEMA = "workflow-run"
 LEGACY_RUN_VERSION = 1
 RUN_VERSION = 2
-WORKFLOW_VERSION = 1
+WORKFLOW_VERSION = 2
+SPECIFICATION_POLICY = "required-v1"
 _WORKFLOW_KEYS = {"version", "name", "goal", "steps"}
 _STEP_KEYS = {
     "id",
@@ -46,6 +48,7 @@ _STEP_KEYS = {
     "verify",
     "timeout_seconds",
     "produces",
+    "contract",
 }
 _STEP_KINDS = {"command", "prompt", "agent"}
 _ACTION_STATUSES = {
@@ -289,6 +292,8 @@ def _normalise_step(raw: Any, *, index: int, prior_id: Optional[str]) -> Dict[st
             raise WorkflowError(
                 f"steps[{index}] {kind} requires outputs or verify for evidence"
             )
+    if "contract" in raw:
+        step["contract"] = raw["contract"]
     return step
 
 
@@ -333,17 +338,19 @@ def _topological_order(steps: Sequence[Mapping[str, Any]]) -> List[str]:
 
 
 def normalise_workflow(raw: Any) -> Dict[str, Any]:
-    """Validate and canonicalise frozen workflow document v1."""
+    """Validate v2 specifications while preserving exact legacy v1 recovery."""
     if not isinstance(raw, dict):
         raise WorkflowError("workflow must be a JSON object")
-    unknown = set(raw).difference(_WORKFLOW_KEYS)
-    missing = _WORKFLOW_KEYS.difference(raw)
+    version = raw.get("version")
+    if isinstance(version, bool) or version not in (1, WORKFLOW_VERSION):
+        raise WorkflowError("workflow version must be 1 (legacy) or 2 (specified)")
+    keys = _WORKFLOW_KEYS | ({"specification"} if version == WORKFLOW_VERSION else set())
+    unknown = set(raw).difference(keys)
+    missing = keys.difference(raw)
     if unknown:
         raise WorkflowError(f"workflow contains unknown fields: {', '.join(sorted(unknown))}")
     if missing:
         raise WorkflowError(f"workflow is missing fields: {', '.join(sorted(missing))}")
-    if raw["version"] != WORKFLOW_VERSION:
-        raise WorkflowError(f"workflow version must be {WORKFLOW_VERSION}")
     name = _require_string(raw["name"], label="workflow.name")
     goal = _require_string(raw["goal"], label="workflow.goal")
     steps_raw = raw["steps"]
@@ -373,7 +380,14 @@ def normalise_workflow(raw: Any) -> Dict[str, Any]:
             raise WorkflowError(f"step {step['id']!r} cannot need itself")
     _topological_order(steps)
     _reject_overlapping_outputs(steps)
-    return {"version": WORKFLOW_VERSION, "name": name, "goal": goal, "steps": steps}
+    workflow = {"version": version, "name": name, "goal": goal, "steps": steps}
+    if version == WORKFLOW_VERSION:
+        spec = validate_specification(raw["specification"], goal=goal)
+        validate_contracts(spec, steps)
+        workflow["specification"] = spec
+    elif any("contract" in step for step in steps):
+        raise WorkflowError("legacy workflow v1 cannot contain step contracts; use v2")
+    return workflow
 
 
 def _step_by_id(workflow: Mapping[str, Any], step_id: str) -> Mapping[str, Any]:
@@ -523,6 +537,7 @@ def _validate_state(state: Any, run_dir: Path) -> Dict[str, Any]:
     if not isinstance(state.get("workspace"), str) or not Path(state["workspace"]).is_absolute():
         raise WorkflowError("state.workspace must be an absolute path")
     if state.get("status") not in {
+        "specification",
         "planning",
         "ready",
         "executing",
@@ -544,6 +559,7 @@ def _validate_state(state: Any, run_dir: Path) -> Dict[str, Any]:
             raise WorkflowError("frozen workflow digest does not match")
     elif state.get("definition_sha256") is not None:
         raise WorkflowError("state has a definition hash without a definition")
+    _validate_specification_state(state)
     if not isinstance(state.get("completed"), dict):
         raise WorkflowError("state.completed must be an object")
     if not isinstance(state.get("callbacks"), dict):
@@ -554,9 +570,9 @@ def _validate_state(state: Any, run_dir: Path) -> Dict[str, Any]:
         if not isinstance(action, dict):
             raise WorkflowError("state.current_action must be an object or null")
         _require_string(action.get("id"), label="state.current_action.id")
-        if action.get("status") not in _ACTION_STATUSES and action.get("kind") != "planning":
+        if action.get("status") not in _ACTION_STATUSES:
             raise WorkflowError("state.current_action.status is invalid")
-        if action.get("kind") == "planning":
+        if action.get("kind") in {"specification", "planning"}:
             if definition is not None:
                 raise WorkflowError("planning action cannot have a frozen workflow")
         else:
@@ -967,8 +983,88 @@ def _verified_outputs(
     return evidence
 
 
+def _specification_documents(spec: Mapping[str, Any]) -> Dict[str, str]:
+    """Canonical, human-readable Markdown records reconstructed from frozen data."""
+    return {
+        "requirements/spec.md": store.dumps(dict(spec), title="Specification and acceptance criteria"),
+        "requirements/nfrs.md": store.dumps({"version": 1, "nfrs": spec["nfrs"]}, title="Non-functional requirements"),
+    }
+
+
+def _freeze_specification(state: Dict[str, Any], raw: Any) -> Dict[str, str]:
+    spec = validate_specification(raw, goal=state["original_goal"])
+    documents = _specification_documents(spec)
+    state["specification"] = spec
+    state["specification_sha256"] = sha256_value(spec)
+    state["specification_artifacts"] = {name: sha256_text(text) for name, text in documents.items()}
+    return documents
+
+
+def _validate_specification_state(state: Mapping[str, Any]) -> None:
+    policy = state.get("specification_policy")
+    request_policy = state.get("request", {}).get("specification_policy")
+    definition = state.get("definition")
+    if policy is None:
+        if request_policy is not None or (definition and definition.get("version") == WORKFLOW_VERSION):
+            raise WorkflowError("specified run lost its specification policy")
+        return  # Existing pre-specification v1/v2 runs retain their frozen contract.
+    if policy != SPECIFICATION_POLICY or request_policy != policy:
+        raise WorkflowError("unsupported or inconsistent specification policy")
+    action = state.get("current_action")
+    if state.get("specification") is None:
+        if (definition is not None or state.get("request", {}).get("mode") != "prompt"
+                or not isinstance(action, dict) or action.get("kind") != "specification"):
+            raise WorkflowError("specified run has no frozen specification")
+        return
+    spec = validate_specification(state["specification"], goal=state["original_goal"])
+    if spec != state["specification"] or sha256_value(spec) != state.get("specification_sha256"):
+        raise WorkflowError("frozen specification digest does not match")
+    expected = {name: sha256_text(text) for name, text in _specification_documents(spec).items()}
+    if state.get("specification_artifacts") != expected:
+        raise WorkflowError("frozen specification artifact digests do not match")
+    if definition is not None:
+        if definition.get("version") != WORKFLOW_VERSION or definition.get("specification") != spec:
+            raise WorkflowError("workflow does not match the frozen specification")
+        if state.get("requirement_coverage") != validate_contracts(spec, definition["steps"]):
+            raise WorkflowError("workflow requirement coverage does not match its contracts")
+
+
+def _assert_specification_artifacts(state: Mapping[str, Any], run_dir: Path) -> None:
+    artifacts = dict(state.get("specification_artifacts", {}))
+    if state.get("specification_policy") == SPECIFICATION_POLICY and state.get("definition") is not None:
+        planner = state.get("planner")
+        if isinstance(planner, dict) and "plan_path" in planner:
+            artifacts[planner["plan_path"]] = planner["plan_sha256"]
+            artifacts[planner["bindings_path"]] = planner["bindings_sha256"]
+    for relative, expected in artifacts.items():
+        _safe_relative_path(relative, label="specification artifact")
+        path = run_dir
+        for part in Path(relative).parts:
+            path = path / part
+            if path.is_symlink():
+                raise WorkflowError(f"specification artifact may not use symlinks: {relative}")
+        try:
+            info = path.stat()
+            if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+                raise WorkflowError(f"specification artifact must be an unaliased regular file: {relative}")
+            if sha256_file(path) != expected:
+                raise WorkflowError(f"frozen specification artifact changed: {relative}")
+        except OSError as exc:
+            raise WorkflowError(f"frozen specification artifact missing or unreadable: {relative}") from exc
+
+
+def _specification_receipt(state: Mapping[str, Any], action: Mapping[str, Any]) -> Dict[str, Any]:
+    if state.get("specification") is None:
+        return {}
+    step = _step_by_id(state["definition"], action["step_id"])
+    return {"specification_sha256": state["specification_sha256"],
+            "specification_artifacts": state["specification_artifacts"],
+            "specification_context": step_context(state["specification"], step)}
+
+
 def _assert_accepted_evidence(state: Mapping[str, Any], run_dir: Path) -> None:
     """Accepted direct output hashes are immutable across every hydration."""
+    _assert_specification_artifacts(state, run_dir)
     workspace = _workspace_root(state)
     completed = state.get("completed", {})
     for step_id, completion in completed.items():
@@ -1076,6 +1172,8 @@ class WorkflowKernel:
     ) -> Dict[str, Any]:
         raw, source = load_document(workflow_file, label="workflow file")
         workflow = normalise_workflow(raw)
+        if workflow["version"] != WORKFLOW_VERSION:
+            raise WorkflowError("new workflows require version 2 specification, NFRs, and step contracts; use the workflow skill to reconcile the steps first")
         policy = _make_execution_policy(
             max_active=max_active,
             shared_workspace_disjoint=shared_workspace_disjoint,
@@ -1136,6 +1234,24 @@ class WorkflowKernel:
             execution_policy=policy,
         )
 
+    def init_spec(
+        self, *, spec_file: Path, backchain_root: Path, run_dir: Path, repo: Path,
+        isolate: bool = False, max_active: int = 1, shared_workspace_disjoint: bool = False,
+    ) -> Dict[str, Any]:
+        raw, source = load_document(spec_file, label="specification")
+        spec = validate_specification(raw)
+        root = _absolute(backchain_root, label="Backchain root", require_exists=True)
+        if not root.is_dir():
+            raise WorkflowError("Backchain root must be a directory")
+        return self._init(
+            run_dir=run_dir, repo=repo, isolate=isolate, original_goal=spec["goal"],
+            request={"mode": "spec", "source_path": str(_absolute(spec_file, label="specification", require_exists=True)),
+                     "source_sha256": sha256_text(source), "source": source, "backchain_root": str(root)},
+            definition=None, planner={"backchain_root": str(root)},
+            execution_policy=_make_execution_policy(max_active=max_active, shared_workspace_disjoint=shared_workspace_disjoint),
+            specification=spec,
+        )
+
     def _init(
         self,
         *,
@@ -1147,6 +1263,7 @@ class WorkflowKernel:
         definition: Optional[Dict[str, Any]],
         planner: Optional[Dict[str, Any]],
         execution_policy: Dict[str, Any],
+        specification: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         target_run = _absolute(run_dir, label="run directory", require_exists=False)
         if target_run.exists() or target_run.is_symlink():
@@ -1191,7 +1308,8 @@ class WorkflowKernel:
             "created_at": _now(),
             "run_dir": str(target_run),
             "original_goal": original_goal,
-            "request": request,
+            "request": dict(request, specification_policy=SPECIFICATION_POLICY),
+            "specification_policy": SPECIFICATION_POLICY,
             "definition": definition,
             "definition_sha256": None,
             "repo": _git_identity(source_repo),
@@ -1215,15 +1333,21 @@ class WorkflowKernel:
                     "claim_requests": {},
                 }
             )
+        writes: Dict[str, str] = {}
+        frozen_spec = definition["specification"] if definition is not None else specification
+        if frozen_spec is not None:
+            writes.update(_freeze_specification(state, frozen_spec))
+            if definition is not None:
+                state["requirement_coverage"] = validate_contracts(frozen_spec, definition["steps"])
         with run_lock(target_run):
             if definition is None:
-                self._issue_planning_action(state)
+                self._issue_planning_action(state, kind="planning" if frozen_spec else "specification")
             else:
                 if _frontier_enabled(state):
                     self._refresh_frontier_state(state)
                 else:
                     self._issue_next_action(state)
-            return self._persist_locked(target_run, state)
+            return self._persist_locked(target_run, state, extra_writes=writes)
 
     # ----- loading, storage, recovery -----------------------------------
 
@@ -1395,6 +1519,8 @@ class WorkflowKernel:
                 "next": recovery_argv
             },
         }
+        if state.get("specification") is not None:
+            packet.update({key: state[key] for key in ("specification_sha256", "specification_artifacts")})
         if action is None:
             if state["status"] == "complete":
                 packet["completion"] = "all declared steps have accepted verified receipts"
@@ -1412,21 +1538,52 @@ class WorkflowKernel:
             }
         )
         kind = action["kind"]
+        if kind == "specification":
+            spec_path = str(run_dir / "planning" / f"{action_id}.spec.json")
+            accept = self._cli("accept-spec", "--run-dir", str(run_dir), "--action", action_id, "--spec", spec_path)
+            packet.update({
+                "prompt": state["original_goal"],
+                "spec_file": spec_path,
+                "specification_reference": str(self.cli_path.parent.parent / "references" / "planning.md"),
+                "specification_instruction": (
+                    "Reconcile the exact original request with existing repository specs, NFRs, and accepted design decisions. "
+                    "Identify what is preserved, added, modified, or retired; protect unaffected behavior and record source locators in the relevant criteria or assumptions. "
+                    "Write a specification/v1 JSON document: goal (exact original request), deliverables with requirement IDs, "
+                    "functional_requirements with acceptance criteria, nfrs with acceptance and scope, assumptions, out_of_scope, unresolved. "
+                    "Each deliverable is one coherent independently verifiable outcome, not an arbitrary phase or file. "
+                    "Identify relevant quality constraints even when unstated; include their operating conditions and observable verification surface. "
+                    "Preserve applicable component, interaction, visual, and state/data invariants. Label assumptions and resolve material open questions. "
+                    "Follow the bundled planning reference for the exact schema. Submit only when unresolved is empty. "
+                    "The script freezes the specification and then issues the Backchain planning action."
+                ),
+                "next_argv": accept, "allowed_operation_argv_templates": {"accept_spec": accept},
+                "allowed_operations": {"accept_spec": accept},
+            })
+            return packet
         if kind == "planning":
             plan_path, bindings_path = self._plan_paths(run_dir, action_id)
-            packet["prompt"] = state["request"]["prompt"]
+            packet["prompt"] = state["original_goal"]
             backchain_root = state["request"].get("backchain_root")
             card = (
                 str(Path(backchain_root) / "skills" / "backchain" / "SKILL.md")
                 if isinstance(backchain_root, str)
                 else "selected Backchain SKILL.md"
             )
+            if state.get("specification") is not None:
+                packet["specification"] = state["specification"]
             packet["planning_instruction"] = (
                 f"Load the selected {card} fully and follow that skill's own technical lenses, "
                 "convergence lifecycle, and terminal evidence requirements. Produce its plan "
                 "schema and separate execution bindings, then invoke this exact accept-plan "
                 "command. Package validation is structural only; it does not replace the "
-                "selected skill's semantic convergence obligation."
+                "selected skill's semantic convergence obligation. "
+                + ("Use the frozen specification and NFRs as governing source clauses via backchain-caller/v1; keep its companion outside the closed plan JSON. "
+                   "Preserve the exact original goal. Map every FR and applicable NFR to implementation and verification owners in each binding's contract. "
+                   "Use one coherent deliverable per implementation step; declare shared setup, integration, verification, or release roles with a reason. "
+                   "Prefer independent branches where actual prerequisites permit; identify every real dependency explicitly. "
+                   "Plan-ready inputs, code-ready prerequisites, and done evidence are separate obligations. "
+                   "Global release joins need every scoped producer; post-release consumer checks remain required leaves."
+                   if state.get("specification") is not None else "")
             )
             accept = self._cli(
                 "accept-plan",
@@ -1459,6 +1616,8 @@ class WorkflowKernel:
         packet["dependencies"] = dependencies
         packet["timeout_seconds"] = step["timeout_seconds"]
         packet["produces"] = list(step["produces"])
+        if state.get("specification") is not None:
+            packet["specification_context"] = step_context(state["specification"], step)
 
         retry = self._cli(
             "retry",
@@ -1658,6 +1817,11 @@ class WorkflowKernel:
                     "dependencies": dependencies,
                 }
             )
+        if state.get("specification") is not None:
+            for item in ready_frontier:
+                step = _step_by_id(state["definition"], item["step_id"])
+                item["specification_context"] = step_context(state["specification"], step)
+                item["specification_sha256"] = state["specification_sha256"]
         active_packets: List[Dict[str, Any]] = []
         for action in _active_actions(state):
             action_state = dict(state)
@@ -1733,7 +1897,7 @@ class WorkflowKernel:
                 "workspace_policy": {
                     "mode": "shared-workspace-disjoint",
                     "concurrent_kinds": ["agent"],
-                    "global_exclusive_kinds": ["command", "prompt", "planning"],
+                    "global_exclusive_kinds": ["command", "prompt", "specification", "planning"],
                     "agent_lease": "declared-output-exclusive",
                 },
                 "claim_instruction": (
@@ -1748,20 +1912,20 @@ class WorkflowKernel:
 
     # ----- scheduler ------------------------------------------------------
 
-    def _issue_planning_action(self, state: Dict[str, Any]) -> None:
+    def _issue_planning_action(self, state: Dict[str, Any], *, kind: str = "planning") -> None:
         if state.get("definition") is not None:
             raise WorkflowError("cannot issue a planning action after definition freeze")
         if _active_actions(state):
             raise WorkflowError("cannot issue planning while execution actions are active")
         state["current_action"] = {
             "id": uuid.uuid4().hex,
-            "kind": "planning",
+            "kind": kind,
             "step_id": None,
             "attempt": 1,
             "status": "ready",
             "issued_at": _now(),
         }
-        state["status"] = "planning"
+        state["status"] = kind
 
     def _ready_steps(self, state: Mapping[str, Any]) -> List[Mapping[str, Any]]:
         workflow = state.get("definition")
@@ -1835,7 +1999,7 @@ class WorkflowKernel:
             return
         workflow = state.get("definition")
         if not isinstance(workflow, dict):
-            state["status"] = "planning" if state.get("current_action") is not None else "blocked"
+            state["status"] = state["current_action"]["kind"] if state.get("current_action") is not None else "blocked"
             return
         if len(state["completed"]) == len(workflow["steps"]):
             state["status"] = "complete"
@@ -1889,6 +2053,8 @@ class WorkflowKernel:
                 self._persist_locked(target_run, state)
             if not _frontier_enabled(state):
                 raise WorkflowError("claim-ready requires --max-active and --shared-workspace-disjoint at init")
+            if state.get("definition") is None:
+                raise WorkflowError("claim-ready requires an accepted specification and plan")
             policy = _execution_policy(state)
             if not 1 <= limit <= policy["max_active"]:
                 raise WorkflowError("claim limit must be between 1 and max_active")
@@ -1986,6 +2152,31 @@ class WorkflowKernel:
 
     # ----- planning -------------------------------------------------------
 
+    def accept_spec(self, *, run_dir: Path, action_id: str, spec_file: Path) -> Dict[str, Any]:
+        target_run = _absolute(run_dir, label="run directory", require_exists=True)
+        raw, source = load_document(spec_file, label="specification")
+        source_digest = sha256_text(source)
+        with run_lock(target_run):
+            state, changed = self._load_locked(target_run, reconcile=True)
+            if changed:
+                self._persist_locked(target_run, state)
+            spec = validate_specification(raw, goal=state["original_goal"])
+            prior = state.get("specification_acceptance")
+            if isinstance(prior, dict) and prior.get("action_id") == action_id:
+                if prior.get("source_sha256") != source_digest or prior.get("specification_sha256") != sha256_value(spec):
+                    raise WorkflowError("specification callback conflicts with the accepted specification")
+                return self._packet(state, target_run)
+            self._require_current_action(state, action_id, kind="specification", statuses=("ready",))
+            writes = _freeze_specification(state, spec)
+            state["specification_acceptance"] = {
+                "action_id": action_id, "source_sha256": source_digest,
+                "specification_sha256": state["specification_sha256"], "accepted_at": _now(),
+                "source": source,
+            }
+            state["current_action"] = None
+            self._issue_planning_action(state)
+            return self._persist_locked(target_run, state, extra_writes=writes)
+
     def accept_plan(
         self,
         *,
@@ -2003,19 +2194,28 @@ class WorkflowKernel:
             state, changed = self._load_locked(target_run, reconcile=True)
             if changed:
                 self._persist_locked(target_run, state)
+            prior = state.get("plan_acceptance")
+            if isinstance(prior, dict) and prior.get("action_id") == action_id:
+                if (prior.get("plan_sha256") != sha256_text(plan_text)
+                        or prior.get("bindings_sha256") != sha256_text(bindings_text)
+                        or prior.get("specification_sha256") != state.get("specification_sha256")):
+                    raise WorkflowError("planning callback conflicts with the accepted plan")
+                return self._packet(state, target_run)
             action = self._require_current_action(
                 state, action_id, kind="planning", statuses=("ready",)
             )
-            if state["request"].get("mode") != "prompt":
-                raise WorkflowError("accept-plan is only valid for prompt-initialized runs")
+            if state["request"].get("mode") not in {"prompt", "spec"}:
+                raise WorkflowError("accept-plan is only valid for prompt or specification runs")
             if plan.get("goal") != state["original_goal"]:
                 raise WorkflowError("Backchain plan goal does not match the frozen original request")
             backchain_root = state["request"].get("backchain_root")
             if not isinstance(backchain_root, str):
                 raise WorkflowError("planning state has no selected Backchain root")
-            staging = target_run / "planning" / f"staging-{action_id}"
-            if staging.exists() or staging.is_symlink():
-                raise WorkflowError("Backchain staging path already exists for this action")
+            # Each structural packaging attempt keeps its own evidence. A failed
+            # attempt cannot strand a corrected callback behind a stale directory.
+            staging = _preflight_output_path(
+                target_run, f"planning/staging-{action_id}-{uuid.uuid4().hex}"
+            )
             adapter = self._adapters()
             try:
                 compiled, provenance = adapter.compile_backchain(
@@ -2023,6 +2223,8 @@ class WorkflowKernel:
                 )
             except Exception as exc:
                 raise WorkflowError(f"Backchain plan compilation failed: {exc}") from exc
+            if state.get("specification_policy") == SPECIFICATION_POLICY:
+                compiled = dict(compiled, version=WORKFLOW_VERSION, specification=state["specification"])
             workflow = normalise_workflow(compiled)
             if workflow["goal"] != state["original_goal"]:
                 raise WorkflowError("compiled workflow goal does not match the frozen original request")
@@ -2034,6 +2236,13 @@ class WorkflowKernel:
             plan_relative = f"planning/{action_id}.plan.json"
             bindings_relative = f"planning/{action_id}.bindings.json"
             state["definition"] = workflow
+            if state.get("specification") is not None:
+                state["requirement_coverage"] = validate_contracts(state["specification"], workflow["steps"])
+            state["plan_acceptance"] = {
+                "action_id": action_id, "plan_sha256": sha256_text(plan_text),
+                "bindings_sha256": sha256_text(bindings_text),
+                "specification_sha256": state.get("specification_sha256"),
+            }
             state["planner"] = {
                 "action_id": action_id,
                 "accepted_at": _now(),
@@ -2326,6 +2535,7 @@ class WorkflowKernel:
             "checks": [dict(check) for check in checks],
             "dispatch": action.get("dispatch"),
         }
+        receipt.update(_specification_receipt(state, action))
         if isinstance(action.get("block"), dict):
             receipt["block"] = dict(action["block"])
         receipt_relative = f"receipts/{action['id']}.md"
@@ -3074,6 +3284,7 @@ class WorkflowKernel:
                 "outputs": output_evidence,
                 "checks": checks,
             }
+            receipt.update(_specification_receipt(state, action))
             receipt_relative = f"receipts/{action_id}.md"
             receipt_text = store.dumps(receipt, title=f"Workflow receipt {action['step_id']}")
             receipt_hash = sha256_text(receipt_text)
@@ -3184,9 +3395,9 @@ class WorkflowKernel:
                     },
                 }
             )
-            if action.get("kind") == "planning":
+            if action.get("kind") in {"specification", "planning"}:
                 state["current_action"] = None
-                self._issue_planning_action(state)
+                self._issue_planning_action(state, kind=action["kind"])
                 return self._persist_locked(target_run, state)
             # New action issuance records current output preimages, so retry
             # cannot silently accept artifacts left by the fenced attempt.

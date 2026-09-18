@@ -3,19 +3,22 @@
 **Files remember. Scripts decide. Skills do the work.**
 
 Weave is a local workflow facility for durable sequences and dependency graphs.
-Give it a file of steps, or a request that Backchain turns into steps. The script
-tells the host exactly what is ready, accepts verified results, and keeps going
-until every required step is complete.
+It freezes a specification, functional requirements, and NFRs before it freezes
+executable work. Give it a version-2 recipe with that contract already present,
+an existing specification, or a prompt that first becomes a durable
+specification and then a Backchain plan. The script tells the host exactly what
+is ready, accepts verified results, and keeps going until every required leaf is
+complete.
 
 ```mermaid
 flowchart LR
-  A[Step file or prompt] --> B[Frozen workflow]
-  B --> C[Script reads durable state]
-  C --> D[Ready action packets]
-  D --> E[Commands and native agents]
+  A[Recipe, spec, or prompt] --> B[Frozen specification and NFRs]
+  B --> C[Validated steps and contracts]
+  C --> D[Frozen workflow graph]
+  D --> E[Ready action packets]
   E --> F[Evidence and receipts]
-  F --> C
-  C --> G[All required work complete]
+  F --> D
+  D --> G[All required work complete]
 ```
 
 The standalone repository is [whichguy/workflow-engine](https://github.com/whichguy/workflow-engine).
@@ -68,9 +71,11 @@ available delegation and collection tools.
 
 | Value | Observable behavior |
 | --- | --- |
-| Durable truth lives in files | `state.md` holds the frozen graph, attempts, handles and outcomes. A new conversation recovers from the run directory. |
+| Durable truth lives in files | `state.md` holds the frozen specification, graph, attempts, handles and outcomes. A new conversation recovers from the run directory. |
 | Scripts own transitions | The host follows packets. It never picks successors, edits state, or marks work done from memory. |
 | Small recoverable context | A packet contains the bounded task, workspace, direct dependency receipts and exact callbacks. Load detail when needed. |
+| Requirements stay connected | Each functional requirement has an implementing step and verifier; every applicable NFR has scoped verification coverage. |
+| Atomic work has a visible boundary | A deliverable step owns one coherent outcome. Shared setup, integration, verification, and release work declare their scope and reason. |
 | Ready and done mean something | Every direct prerequisite needs an accepted receipt; outputs and declared checks must pass before acceptance. |
 | Every branch counts | Joins wait for all suppliers. Completion waits for every required step, including terminal leaves with no explicit join. |
 | Native judgment stays native | Backchain plans; ask-agent delegates through host tools. The runtime has no hidden model launcher. |
@@ -80,13 +85,16 @@ available delegation and collection tools.
 ## A small vocabulary
 
 **Weave** is the facility. A **recipe** is a workflow definition; a **run** is one
-execution. A **packet** is a script-issued work order; a **receipt** is accepted
-evidence. The JSON contract keeps ordinary terms such as `steps`, `needs`,
-`outputs`, `active_actions` and `completed`.
+execution. A **specification** names the deliverables, functional requirements,
+and NFRs that govern a run. A **contract** links one step to that specification.
+A **packet** is a script-issued work order; a **receipt** is accepted evidence.
+The JSON contract keeps ordinary terms such as `steps`, `needs`, `outputs`,
+`active_actions` and `completed`. [Specification-first workflows](docs/SPECIFICATION.md)
+defines the contract and its limits.
 
 | Recipe | Shape | Start with steps | Start with a prompt |
 | --- | --- | --- | --- |
-| Relay | A sequence | [serial.workflow.json](examples/serial.workflow.json) | [request.txt](examples/request.txt) adds a native reporting step |
+| Relay | A sequence | [serial.workflow.json](examples/serial.workflow.json) | Use an authored specification or see Braid |
 | Diamond | One fork and join | [diamond.workflow.json](examples/diamond.workflow.json) | See Braid |
 | Braid | Fork, join, fork, join again | [braid.workflow.json](examples/braid.workflow.json) | [braid.request.txt](examples/braid.request.txt) |
 | Confetti | Terminal fan-out; wait for all | [confetti.workflow.json](examples/confetti.workflow.json) | [confetti.request.txt](examples/confetti.request.txt) |
@@ -108,31 +116,57 @@ mkdir "$DEMO/workspace"
 ./weave next --run-dir "$DEMO/run"
 ```
 
-`run` executes commands and stops at host work or a blocker. Command-only Braid
+The version-2 recipe embeds its specification and every step contract. `run`
+executes commands and stops at host work or a blocker. Command-only Braid
 finishes by itself. Confetti stops for prompt callbacks; Native Braid stops for
 native dispatch. Only `status=complete` means completion—exit zero can mean
 “waiting.” Another `next` reads the durable result without rerunning effects.
 Keep the temporary directory to inspect outputs and receipts.
 
-Omitted `needs` means “after the previous step.” Explicit `needs: []` makes a root.
-An explicit array names all direct prerequisites. Declaration order is not a
-dependency. Every step in the frozen recipe is required.
+Use explicit `needs` in a new recipe: `[]` makes a root and a nonempty array names
+all direct prerequisites. Declaration order is not a dependency. Every step in
+the frozen recipe is required.
 
 ## Start from a prompt
 
 ```sh
+DEMO=$(mktemp -d)
+mkdir "$DEMO/workspace"
 ./weave init --prompt-file examples/braid.request.txt \
+  --backchain-root /absolute/path/to/backchain \
+  --repo "$DEMO/workspace" --run-dir "$DEMO/run" > "$DEMO/spec-packet.json"
+
+SPEC_ACTION="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["action_id"])' "$DEMO/spec-packet.json")"
+SPEC_FILE="$DEMO/run/planning/$SPEC_ACTION.spec.json"
+mkdir -p "$(dirname "$SPEC_FILE")"
+cp examples/plans/braid.spec.json "$SPEC_FILE"
+./weave accept-spec --run-dir "$DEMO/run" --action "$SPEC_ACTION" --spec "$SPEC_FILE" > "$DEMO/plan-packet.json"
+
+PLAN_ACTION="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["action_id"])' "$DEMO/plan-packet.json")"
+./weave accept-plan --run-dir "$DEMO/run" --action "$PLAN_ACTION" \
+  --plan examples/plans/braid.plan.json --bindings examples/plans/braid.bindings.json
+./weave run --run-dir "$DEMO/run"
+```
+
+The first packet requests a specification whose `goal` exactly preserves the
+prompt. `accept-spec` freezes it under `requirements/`, then the planning packet
+directs the host to load selected Backchain and Until Loop resources, perform their
+dependency discovery and selected convergence procedure, and write a plan plus
+explicit execution bindings. For new specification-based runs, use the frozen
+specification and NFRs through Backchain's `backchain-caller/v1` companion; keep
+that companion outside the closed Backchain plan JSON. Retain the actual terminal
+receipt and candidate-bound domain evidence before submitting `accept-plan`. The
+script invokes Backchain's real package-only validator and freezes the graph. No
+executable command is guessed from planning prose.
+
+When a specification already exists, skip its drafting packet while retaining the
+same planning contract:
+
+```sh
+./weave init --spec-file examples/plans/braid.spec.json \
   --backchain-root /absolute/path/to/backchain \
   --repo /absolute/path/to/workspace --run-dir /absolute/path/to/new-run
 ```
-
-The planning packet directs the host to load the selected Backchain skill, perform
-its dependency discovery and selected convergence procedure, and write a plan plus
-explicit execution bindings. Current Backchain delegates recurrence to its selected
-Until Loop. Retain the actual terminal receipt and candidate-bound domain evidence
-in the planning companion, then submit the packet's `accept-plan` command. The
-script invokes Backchain's real package-only validator and freezes the graph.
-No executable command is guessed from planning prose.
 
 The companion documents semantic planning; packaging proves structural acceptance;
 execution receipts prove completed work. These are distinct claims. Automated
@@ -149,7 +183,9 @@ Or:
 
 > Use that Weave skill with this prompt: “Create an input dataset, independently
 > calculate its count and sum, combine them, independently produce two reports,
-> and verify both reports.” Use Backchain and keep a durable run directory.
+> and verify both reports.” First create a specification with NFRs, then use
+> Backchain to derive atomic, explicitly dependent step contracts. Keep a durable
+> run directory.
 
 The installed skill is named `workflow`; `weave` is the checkout command and
 display name. Source-card invocation remains available without installation.
@@ -189,19 +225,25 @@ Serial traversal is the default. Enable actual native-agent concurrency with:
 
 The flag declares that concurrent agents own separate output files and will not
 modify each other's work or other shared resources. Every concurrent agent needs
-declared outputs. Commands, prompts and planning run exclusively. This is trusted
+declared outputs. Commands, prompts, specification drafting, and planning run
+exclusively. This is trusted
 cooperative ownership, not a filesystem sandbox; one run-level worktree does not
 isolate branches from each other.
 
 The v2 driver claims ready work, prepares each native launch, records each real
 handle, and collects all required native results. A claim does not launch work.
 `next` never claims or launches. Recovered launch intent requires reconciliation.
-Existing v1 runs retain the serial protocol. See [concurrency](docs/CONCURRENCY.md)
+Workflow-document version 2 means specification-aware authored input. Runtime
+state version 1 remains the serial protocol and runtime state version 2 remains
+the opt-in frontier protocol; legacy persisted runs retain their issued behavior.
+See [concurrency](docs/CONCURRENCY.md)
 and [the driver skill](skills/workflow/SKILL.md).
 
 ## Evidence, recovery and isolation
 
-`state.md` is authoritative; `packet.md` is derived. Immutable receipts bind results
+`state.md` is authoritative; `packet.md` is derived. `requirements/spec.md` and
+`requirements/nfrs.md` are canonical frozen views guarded by state-held hashes.
+Immutable receipts bind results
 to attempts and output hashes. The extracted ShipLoop Markdown store commits state
 and receipts together with write-ahead recovery. Exact callback replay is harmless;
 stale or conflicting callbacks fail. Retry requires a reason and confirmation that

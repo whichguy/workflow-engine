@@ -2,7 +2,8 @@
 
 ```mermaid
 flowchart LR
-  A[Request or workflow file] --> B[Script loads durable run]
+  A[Prompt, spec or workflow file] --> S[Frozen specification and NFRs]
+  S --> B[Script loads durable run]
   B --> C[Current action packet]
   C --> D[Thin skill and native agents]
   D --> E[Artifacts and callback]
@@ -14,9 +15,11 @@ flowchart LR
 **Decision: pilot a small extracted runtime in a sibling repository.** The key
 abstraction is a durable action protocol. An agent supplies judgment and work;
 the script owns the authoritative cursor, action identity, readiness, acceptance
-and next transition. A step file and a single prompt are two entry points to the
-same runtime. The prompt entry first issues a planning action; it does not give
-the driver skill a second orchestration loop.
+and next transition. A step file, a specification, and a single prompt enter the
+same runtime. A new prompt first issues a specification action; the accepted
+specification and NFRs then govern Backchain planning. Authored workflows carry
+the equivalent baseline and per-step contracts. The driver has no second
+orchestration loop. See [the specification contract](SPECIFICATION.md).
 
 ## What is already present
 
@@ -47,15 +50,21 @@ Decisive source locations:
 
 ## Data and authority
 
-The authored document contains intent, explicit dependencies, typed executors and
-checks. It is frozen into `state.md` at initialization or plan acceptance. The
+The authored workflow document v2 contains a specification v1, functional
+requirements, scoped NFRs, atomic deliverable or shared-step contracts, explicit
+dependencies, typed executors and checks. It is frozen into `state.md` at initialization or plan acceptance. The
 source document can later change without changing that run. A change to an active
 graph needs a future explicit migration contract; editing the file cannot silently
 rewrite running or completed work.
 
 `state.md` is machine-readable Markdown with one JSON fence. It owns the workflow,
 workspace, current attempt, native handle, receipts and outcomes. `packet.md` is a
-derived handoff. The kernel uses a local run lock and ShipLoop's write-ahead
+derived handoff. Canonical `requirements/spec.md` and `requirements/nfrs.md`
+are generated from frozen state, persisted in the same transaction, and hashed
+on every hydration. Accepted planner artifacts are also bound by hash. The
+separate `specification_policy` marks new runs; runtime state versions keep their
+serial/frontier meaning and old no-policy records retain their issued protocol.
+The kernel uses a local run lock and ShipLoop's write-ahead
 transaction store so state and its accompanying receipts recover together.
 
 Each accepted step releases only dependants whose prerequisites are satisfied.
@@ -83,8 +92,9 @@ attempt identity after the caller confirms that the old writer is stopped.
 ## Concrete trace
 
 For a workflow that generates numbers, asks a native agent to summarize them, and
-verifies the summary, initialization freezes three nodes and issues the generate
-action. `execute` writes the numbers and commits its receipt. The script then
+verifies the summary, an authored v2 definition binds the report FR, its quality
+criteria, and setup/deliverable/verification roles to three nodes. Initialization
+freezes that baseline and issues the generate action. `execute` writes the numbers and commits its receipt. The script then
 issues the summarize packet. The skill dispatches that prompt and records the real
 native handle. A successful callback with a missing summary file does not release
 verification. Once the output and checks pass, the script persists the receipt and

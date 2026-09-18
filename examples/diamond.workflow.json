@@ -1,11 +1,45 @@
 {
-  "version": 1,
+  "version": 2,
   "name": "dependency-join",
   "goal": "Demonstrate a join that waits for both direct prerequisites",
+  "specification": {
+    "version": 1,
+    "goal": "Demonstrate a join that waits for both direct prerequisites",
+    "deliverables": [
+      {"id": "D-left", "description": "The transformed left source.", "requirements": ["FR-left"]},
+      {"id": "D-right", "description": "The transformed right source.", "requirements": ["FR-right"]}
+    ],
+    "functional_requirements": [
+      {"id": "FR-left", "description": "The left transform is derived from the shared source.", "acceptance": ["b.txt contains source-left"]},
+      {"id": "FR-right", "description": "The right transform is derived from the shared source.", "acceptance": ["c.txt contains source-right"]}
+    ],
+    "nfrs": [
+      {"id": "NFR-join", "description": "The joined artifact uses accepted evidence from both branches.", "acceptance": ["joined.txt is created only after b.txt and c.txt exist"], "scope": "all"}
+    ],
+    "assumptions": [],
+    "out_of_scope": [],
+    "unresolved": []
+  },
   "steps": [
-    {"id":"A","kind":"command","needs":[],"argv":["python3","-c","from pathlib import Path; Path('a.txt').write_text('source')"],"outputs":["a.txt"]},
-    {"id":"B","kind":"command","needs":["A"],"argv":["python3","-c","from pathlib import Path; Path('b.txt').write_text(Path('a.txt').read_text()+'-left')"],"outputs":["b.txt"]},
-    {"id":"C","kind":"command","needs":["A"],"argv":["python3","-c","from pathlib import Path; Path('c.txt').write_text(Path('a.txt').read_text()+'-right')"],"outputs":["c.txt"]},
-    {"id":"D","kind":"command","needs":["B","C"],"argv":["python3","-c","from pathlib import Path; assert Path('b.txt').is_file() and Path('c.txt').is_file(); Path('joined.txt').write_text(Path('b.txt').read_text()+' | '+Path('c.txt').read_text())"],"outputs":["joined.txt"]}
+    {
+      "id": "A", "kind": "command", "needs": [],
+      "argv": ["python3", "-c", "from pathlib import Path; Path('a.txt').write_text('source')"], "outputs": ["a.txt"],
+      "contract": {"role": "setup", "deliverables": ["D-left", "D-right"], "requirements": [], "verifies": [], "ready_when": ["no prerequisite evidence is required"], "done_when": ["a.txt contains the shared source"], "shared_reason": "The same source artifact supplies both independent transforms."}
+    },
+    {
+      "id": "B", "kind": "command", "needs": ["A"],
+      "argv": ["python3", "-c", "from pathlib import Path; Path('b.txt').write_text(Path('a.txt').read_text()+'-left')"], "outputs": ["b.txt"],
+      "contract": {"role": "deliverable", "deliverables": ["D-left"], "requirements": ["FR-left"], "verifies": [], "ready_when": ["the accepted shared source is available"], "done_when": ["b.txt contains the left transform"]}
+    },
+    {
+      "id": "C", "kind": "command", "needs": ["A"],
+      "argv": ["python3", "-c", "from pathlib import Path; Path('c.txt').write_text(Path('a.txt').read_text()+'-right')"], "outputs": ["c.txt"],
+      "contract": {"role": "deliverable", "deliverables": ["D-right"], "requirements": ["FR-right"], "verifies": [], "ready_when": ["the accepted shared source is available"], "done_when": ["c.txt contains the right transform"]}
+    },
+    {
+      "id": "D", "kind": "command", "needs": ["B", "C"],
+      "argv": ["python3", "-c", "from pathlib import Path; assert Path('b.txt').is_file() and Path('c.txt').is_file(); Path('joined.txt').write_text(Path('b.txt').read_text()+' | '+Path('c.txt').read_text())"], "outputs": ["joined.txt"],
+      "contract": {"role": "integration", "deliverables": ["D-left", "D-right"], "requirements": [], "verifies": ["FR-left", "FR-right", "NFR-join"], "ready_when": ["both accepted branch receipts are available"], "done_when": ["joined.txt contains both transformed sources"], "shared_reason": "The join is the one place where the independently produced transforms must meet."}
+    }
   ]
 }

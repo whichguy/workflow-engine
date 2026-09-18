@@ -1,30 +1,42 @@
 {
-  "version": 1,
+  "version": 2,
   "name": "confetti",
   "goal": "Prepare two independent terminal notes and complete only after both have accepted evidence.",
+  "specification": {
+    "version": 1,
+    "goal": "Prepare two independent terminal notes and complete only after both have accepted evidence.",
+    "deliverables": [
+      {"id": "D-left-note", "description": "A reviewed left launch note.", "requirements": ["FR-left-note"]},
+      {"id": "D-right-note", "description": "A reviewed right launch note.", "requirements": ["FR-right-note"]}
+    ],
+    "functional_requirements": [
+      {"id": "FR-left-note", "description": "The left reviewer leaves a distinct observation.", "acceptance": ["left-note.txt begins with LEFT:"]},
+      {"id": "FR-right-note", "description": "The right reviewer leaves a distinct observation.", "acceptance": ["right-note.txt begins with RIGHT:"]}
+    ],
+    "nfrs": [
+      {"id": "NFR-independent-evidence", "description": "Each terminal review has its own accepted evidence and check.", "acceptance": ["left and right check artifacts are separate and both pass"], "scope": "all"}
+    ],
+    "assumptions": [],
+    "out_of_scope": [],
+    "unresolved": []
+  },
   "steps": [
     {
-      "id": "seed",
-      "kind": "command",
-      "needs": [],
-      "argv": ["python3", "-c", "from pathlib import Path; Path('brief.txt').write_text('Review the launch note.\\n')"],
-      "outputs": ["brief.txt"]
+      "id": "seed", "kind": "command", "needs": [],
+      "argv": ["python3", "-c", "from pathlib import Path; Path('brief.txt').write_text('Review the launch note.\\n')"], "outputs": ["brief.txt"],
+      "contract": {"role": "setup", "deliverables": ["D-left-note", "D-right-note"], "requirements": [], "verifies": [], "ready_when": ["no prerequisite evidence is required"], "done_when": ["brief.txt contains the shared review brief"], "shared_reason": "The same accepted brief is the prerequisite for both independent reviews."}
     },
     {
-      "id": "left-note",
-      "kind": "prompt",
-      "needs": ["seed"],
-      "prompt": "Read brief.txt. Write left-note.txt beginning with `LEFT:` and summarize one useful observation.",
-      "outputs": ["left-note.txt"],
-      "verify": [["python3", "-c", "from pathlib import Path; assert Path('left-note.txt').read_text().startswith('LEFT:')"]]
+      "id": "left-note", "kind": "prompt", "needs": ["seed"],
+      "prompt": "Read brief.txt. Write left-note.txt beginning with `LEFT:` and summarize one useful observation.", "outputs": ["left-note.txt"],
+      "verify": [["python3", "-c", "from pathlib import Path; assert Path('left-note.txt').read_text().startswith('LEFT:')"]],
+      "contract": {"role": "deliverable", "deliverables": ["D-left-note"], "requirements": ["FR-left-note"], "verifies": ["FR-left-note", "NFR-independent-evidence"], "ready_when": ["the accepted review brief is available"], "done_when": ["left-note.txt contains one left reviewer observation"]}
     },
     {
-      "id": "right-note",
-      "kind": "prompt",
-      "needs": ["seed"],
-      "prompt": "Read brief.txt. Write right-note.txt beginning with `RIGHT:` and summarize one independent observation.",
-      "outputs": ["right-note.txt"],
-      "verify": [["python3", "-c", "from pathlib import Path; assert Path('right-note.txt').read_text().startswith('RIGHT:')"]]
+      "id": "right-note", "kind": "prompt", "needs": ["seed"],
+      "prompt": "Read brief.txt. Write right-note.txt beginning with `RIGHT:` and summarize one independent observation.", "outputs": ["right-note.txt"],
+      "verify": [["python3", "-c", "from pathlib import Path; assert Path('right-note.txt').read_text().startswith('RIGHT:')"]],
+      "contract": {"role": "deliverable", "deliverables": ["D-right-note"], "requirements": ["FR-right-note"], "verifies": ["FR-right-note", "NFR-independent-evidence"], "ready_when": ["the accepted review brief is available"], "done_when": ["right-note.txt contains one right reviewer observation"]}
     }
   ]
 }

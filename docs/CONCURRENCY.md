@@ -26,7 +26,7 @@ The frozen workflow document stays version 1. Concurrent run state uses version 
 legacy/default run state remains version 1. The run's execution policy selects
 native-agent concurrency and binds its capacity and workspace rule. Existing v1
 state is not silently upgraded. Only `agent` steps run concurrently. Commands,
-prompts and planning are exclusive workspace owners.
+prompts, specification drafting and planning are exclusive workspace owners.
 
 This pilot uses explicit cooperative ownership: concurrent agents write only their
 own non-overlapping declared outputs, have no undeclared shared effects, and do
@@ -45,7 +45,7 @@ which worker wrote a shared file; see [experiment results](experiments/RESULTS.m
 
 A v2 `state.md` retains `active_actions`, one entry per action, with independent
 attempt IDs, output preimages, launch intents and native handles. The original
-planning action stays exclusive until a graph is accepted. `packet.md` is derived.
+specification/planning action stays exclusive until a graph is accepted. `packet.md` is derived.
 The same transaction store and local run lock protect claims and acceptance.
 
 `next` returns a `workflow-frontier-v2` overview:

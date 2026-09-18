@@ -17,6 +17,8 @@ import unittest
 from pathlib import Path
 from typing import Any
 
+from spec_fixtures import authored_specification
+
 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "skills" / "workflow" / "scripts" / "workflow"
@@ -63,6 +65,30 @@ class GraphShapeExamplesTests(unittest.TestCase):
         )
         self.assertIsInstance(packet, dict)
         return packet
+
+    def accept_specification(
+        self, packet: dict[str, Any], specification: dict[str, Any]
+    ) -> dict[str, Any]:
+        spec_file = Path(str(packet["spec_file"]))
+        spec_file.parent.mkdir(parents=True, exist_ok=True)
+        spec_file.write_text(json.dumps(specification), encoding="utf-8")
+        callback = list(packet["next_argv"])
+        self.assertEqual(packet["allowed_operations"]["accept_spec"], callback)
+        self.assertEqual(callback[-2], "--spec")
+        self.assertEqual(callback[-1], str(spec_file))
+        completed = subprocess.run(
+            [str(argument) for argument in callback],
+            cwd=self.base,
+            text=True,
+            capture_output=True,
+            timeout=20,
+            check=False,
+        )
+        self.assertTrue(completed.stdout.strip(), completed.stderr)
+        accepted = json.loads(completed.stdout)
+        self.assertEqual(completed.returncode, 0, accepted)
+        self.assertIsInstance(accepted, dict)
+        return accepted
 
     def init_example(self, filename: str, *, copied: bool = False) -> tuple[dict[str, Any], Path]:
         source = ROOT / "examples" / filename
@@ -288,7 +314,7 @@ class GraphShapeExamplesTests(unittest.TestCase):
                 shutil.copyfile(original, request)
                 exact = request.read_text(encoding="utf-8")
                 run_dir = self.base / f"{request.stem}-run"
-                packet = self.cli_packet(
+                specification_packet = self.cli_packet(
                     "init",
                     "--prompt-file",
                     request,
@@ -298,6 +324,10 @@ class GraphShapeExamplesTests(unittest.TestCase):
                     run_dir,
                     "--repo",
                     self.repo,
+                )
+                packet = self.accept_specification(
+                    specification_packet,
+                    authored_specification(exact),
                 )
                 self.assertEqual(packet["kind"], "planning")
                 self.assertEqual(packet["status"], "planning")

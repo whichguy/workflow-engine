@@ -17,6 +17,8 @@ import time
 from typing import Any, Iterable
 import unittest
 
+from spec_fixtures import specified
+
 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = Path(
@@ -175,12 +177,14 @@ class MissingDelegationTests(unittest.TestCase):
 
     @staticmethod
     def document(steps: list[dict[str, Any]], *, name: str) -> dict[str, Any]:
-        return {
-            "version": 1,
-            "name": name,
-            "goal": "Keep unavailable native delegation as durable script-owned state.",
-            "steps": steps,
-        }
+        return specified(
+            {
+                "version": 1,
+                "name": name,
+                "goal": "Keep unavailable native delegation as durable script-owned state.",
+                "steps": steps,
+            }
+        )
 
     @staticmethod
     def agent(

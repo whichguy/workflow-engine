@@ -19,6 +19,8 @@ import unittest
 from pathlib import Path
 from typing import Any, Iterable
 
+from spec_fixtures import specified
+
 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = Path(
@@ -181,12 +183,14 @@ class FaultRegressionTests(unittest.TestCase):
 
     @staticmethod
     def document(steps: list[dict[str, Any]], *, name: str = "fault-regression") -> dict[str, Any]:
-        return {
-            "version": 1,
-            "name": name,
-            "goal": "Prove recovery and evidence transitions remain script-owned.",
-            "steps": steps,
-        }
+        return specified(
+            {
+                "version": 1,
+                "name": name,
+                "goal": "Prove recovery and evidence transitions remain script-owned.",
+                "steps": steps,
+            }
+        )
 
     @staticmethod
     def host_step(

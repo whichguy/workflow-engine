@@ -1,68 +1,60 @@
 {
-  "version": 1,
+  "version": 2,
   "name": "native-braid",
   "goal": "Demonstrate two native fan-outs, two dependency joins, and a terminal proof that waits for every required leaf.",
+  "specification": {
+    "version": 1,
+    "goal": "Demonstrate two native fan-outs, two dependency joins, and a terminal proof that waits for every required leaf.",
+    "deliverables": [
+      {"id": "D-count", "description": "An independently calculated number count.", "requirements": ["FR-count"]},
+      {"id": "D-sum", "description": "An independently calculated number sum.", "requirements": ["FR-sum"]}
+    ],
+    "functional_requirements": [
+      {"id": "FR-count", "description": "The count result is three.", "acceptance": ["left-count.json equals {count: 3}"]},
+      {"id": "FR-sum", "description": "The sum result is ten.", "acceptance": ["right-sum.json equals {sum: 10}"]}
+    ],
+    "nfrs": [
+      {"id": "NFR-independent-outputs", "description": "Concurrent workers retain separate declared outputs and checks.", "acceptance": ["count and sum outputs and reports remain distinct"], "scope": "all"}
+    ],
+    "assumptions": [],
+    "out_of_scope": [],
+    "unresolved": []
+  },
   "steps": [
     {
-      "id": "A",
-      "kind": "command",
-      "needs": [],
-      "argv": [
-        "python3",
-        "-c",
-        "import json; from pathlib import Path; Path('brief.json').write_text(json.dumps({'numbers': [2, 3, 5]}, sort_keys=True) + '\\n', encoding='utf-8')"
-      ],
-      "outputs": ["brief.json"]
+      "id": "A", "kind": "command", "needs": [],
+      "argv": ["python3", "-c", "import json; from pathlib import Path; Path('brief.json').write_text(json.dumps({'numbers': [2, 3, 5]}, sort_keys=True) + '\\n', encoding='utf-8')"], "outputs": ["brief.json"],
+      "contract": {"role": "setup", "deliverables": ["D-count", "D-sum"], "requirements": [], "verifies": [], "ready_when": ["no prerequisite evidence is required"], "done_when": ["brief.json contains the shared input numbers"], "shared_reason": "Both independent calculations consume the same accepted number list."}
     },
     {
-      "id": "B",
-      "kind": "agent",
-      "needs": ["A"],
-      "prompt": "Read the accepted brief.json evidence. Independently calculate the count of its numbers, then write only left-count.json as a JSON object with one field named count and numeric value 3. Do not edit any other file.",
-      "outputs": ["left-count.json"]
+      "id": "B", "kind": "agent", "needs": ["A"],
+      "prompt": "Read the accepted brief.json evidence. Independently calculate the count of its numbers, then write only left-count.json as a JSON object with one field named count and numeric value 3. Do not edit any other file.", "outputs": ["left-count.json"],
+      "contract": {"role": "deliverable", "deliverables": ["D-count"], "requirements": ["FR-count"], "verifies": [], "ready_when": ["the accepted input number list is available"], "done_when": ["left-count.json records count 3"]}
     },
     {
-      "id": "C",
-      "kind": "agent",
-      "needs": ["A"],
-      "prompt": "Read the accepted brief.json evidence. Independently calculate the sum of its numbers, then write only right-sum.json as a JSON object with one field named sum and numeric value 10. Do not edit any other file.",
-      "outputs": ["right-sum.json"]
+      "id": "C", "kind": "agent", "needs": ["A"],
+      "prompt": "Read the accepted brief.json evidence. Independently calculate the sum of its numbers, then write only right-sum.json as a JSON object with one field named sum and numeric value 10. Do not edit any other file.", "outputs": ["right-sum.json"],
+      "contract": {"role": "deliverable", "deliverables": ["D-sum"], "requirements": ["FR-sum"], "verifies": [], "ready_when": ["the accepted input number list is available"], "done_when": ["right-sum.json records sum 10"]}
     },
     {
-      "id": "D",
-      "kind": "command",
-      "needs": ["B", "C"],
-      "argv": [
-        "python3",
-        "-c",
-        "import json; from pathlib import Path; left=json.loads(Path('left-count.json').read_text(encoding='utf-8')); right=json.loads(Path('right-sum.json').read_text(encoding='utf-8')); assert left == {'count': 3} and right == {'sum': 10}; Path('joined.json').write_text(json.dumps({**left, **right}, sort_keys=True) + '\\n', encoding='utf-8')"
-      ],
-      "outputs": ["joined.json"]
+      "id": "D", "kind": "command", "needs": ["B", "C"],
+      "argv": ["python3", "-c", "import json; from pathlib import Path; left=json.loads(Path('left-count.json').read_text(encoding='utf-8')); right=json.loads(Path('right-sum.json').read_text(encoding='utf-8')); assert left == {'count': 3} and right == {'sum': 10}; Path('joined.json').write_text(json.dumps({**left, **right}, sort_keys=True) + '\\n', encoding='utf-8')"], "outputs": ["joined.json"],
+      "contract": {"role": "integration", "deliverables": ["D-count", "D-sum"], "requirements": [], "verifies": [], "ready_when": ["both accepted calculation receipts are available"], "done_when": ["joined.json contains the count and sum"], "shared_reason": "The calculation results first need to meet in one inspected combined record."}
     },
     {
-      "id": "E",
-      "kind": "agent",
-      "needs": ["D"],
-      "prompt": "Read the accepted joined.json evidence. Write only count-check.txt containing one text line: count=3 followed by a newline. Do not edit any other file.",
-      "outputs": ["count-check.txt"]
+      "id": "E", "kind": "agent", "needs": ["D"],
+      "prompt": "Read the accepted joined.json evidence. Write only count-check.txt containing one text line: count=3 followed by a newline. Do not edit any other file.", "outputs": ["count-check.txt"],
+      "contract": {"role": "verification", "deliverables": ["D-count"], "requirements": [], "verifies": ["FR-count"], "ready_when": ["the accepted joined calculation is available"], "done_when": ["count-check.txt records count=3"], "shared_reason": "This is the independent verification sink for the count deliverable."}
     },
     {
-      "id": "F",
-      "kind": "agent",
-      "needs": ["D"],
-      "prompt": "Read the accepted joined.json evidence. Write only sum-check.txt containing one text line: sum=10 followed by a newline. Do not edit any other file.",
-      "outputs": ["sum-check.txt"]
+      "id": "F", "kind": "agent", "needs": ["D"],
+      "prompt": "Read the accepted joined.json evidence. Write only sum-check.txt containing one text line: sum=10 followed by a newline. Do not edit any other file.", "outputs": ["sum-check.txt"],
+      "contract": {"role": "verification", "deliverables": ["D-sum"], "requirements": [], "verifies": ["FR-sum"], "ready_when": ["the accepted joined calculation is available"], "done_when": ["sum-check.txt records sum=10"], "shared_reason": "This is the independent verification sink for the sum deliverable."}
     },
     {
-      "id": "G",
-      "kind": "command",
-      "needs": ["E", "F"],
-      "argv": [
-        "python3",
-        "-c",
-        "import json; from pathlib import Path; joined=json.loads(Path('joined.json').read_text(encoding='utf-8')); assert joined == {'count': 3, 'sum': 10}; assert Path('count-check.txt').read_text(encoding='utf-8') == 'count=3\\n'; assert Path('sum-check.txt').read_text(encoding='utf-8') == 'sum=10\\n'; Path('terminal-proof.json').write_text(json.dumps({'status': 'complete', 'count': 3, 'sum': 10}, sort_keys=True) + '\\n', encoding='utf-8')"
-      ],
-      "outputs": ["terminal-proof.json"]
+      "id": "G", "kind": "command", "needs": ["E", "F"],
+      "argv": ["python3", "-c", "import json; from pathlib import Path; joined=json.loads(Path('joined.json').read_text(encoding='utf-8')); assert joined == {'count': 3, 'sum': 10}; assert Path('count-check.txt').read_text(encoding='utf-8') == 'count=3\\n'; assert Path('sum-check.txt').read_text(encoding='utf-8') == 'sum=10\\n'; Path('terminal-proof.json').write_text(json.dumps({'status': 'complete', 'count': 3, 'sum': 10}, sort_keys=True) + '\\n', encoding='utf-8')"], "outputs": ["terminal-proof.json"],
+      "contract": {"role": "release", "deliverables": ["D-count", "D-sum"], "requirements": [], "verifies": ["NFR-independent-outputs"], "ready_when": ["both accepted check receipts are available"], "done_when": ["terminal-proof.json records the combined checked outcome"], "shared_reason": "The terminal proof combines the two independently verified deliverables."}
     }
   ]
 }
