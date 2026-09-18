@@ -31,6 +31,13 @@ in those normal profiles. Owned disposable test profiles were removed after
 retaining evidence. Their original absolute locators are historical run records,
 not live installed paths; run state and outputs remain outside those profiles.
 
+A later final observation found another Codex config digest change and removal
+of the pre-existing experimental Grok ask-agent link. Their cause is not
+established by these inventories; neither was restored or replaced by this task.
+The immediate refresh guard above remains a separate, bounded observation.
+The shared skill-craft checkout's status inventory also changed during work;
+release mutations used isolated checkouts and did not reset that shared work.
+
 ## One source, generated package
 
 `skills/workflow/` is authoritative. Run `python3 scripts/sync-plugin-view.py` to

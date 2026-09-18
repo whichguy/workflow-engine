@@ -73,5 +73,15 @@
     "retained": "run state, outputs and evidence outside disposable profiles; source/runtime identities in retained records are historical locators"
   },
   "scope": "Public Git discovery, fresh installation, package parity and installed helper execution in Codex/Claude. Native model evidence is separately recorded for Codex; no native model execution claimed for other hosts. Backchain installed using existing authenticated Git access.",
-  "release_channel": "prerelease; experimental local engine"
+  "release_channel": "prerelease; experimental local engine",
+  "later_profile_observation": {
+    "scope": "A final observation after refresh and disposable-profile cleanup; distinct from the immediate before/after refresh guard",
+    "changed": [
+      "normal Codex config digest",
+      "the pre-existing experimental Grok ask-agent symlink was no longer present"
+    ],
+    "attribution": "Not established by a hash/link inventory; this task did not restore or replace either item",
+    "other_recorded_settings_links_and_registrations": "unchanged",
+    "shared_checkouts": "skill-craft status inventory changed during work; its HEAD and other guarded sibling HEAD/status inventories remained unchanged; release mutations used isolated checkouts"
+  }
 }
