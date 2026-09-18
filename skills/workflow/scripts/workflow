@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+"""Command-line entry point for the Markdown-authoritative workflow kernel."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+from typing import Any, Optional, Sequence
+
+from workflow_core import WorkflowError, WorkflowKernel
+
+
+class _Parser(argparse.ArgumentParser):
+    """Keep the CLI's error protocol JSON-only, including bad flags."""
+
+    def error(self, message: str) -> None:  # pragma: no cover - argparse controls routes
+        raise WorkflowError(message)
+
+
+def _path(value: str) -> Path:
+    return Path(value)
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = _Parser(prog=str(Path(__file__).resolve()), add_help=True)
+    subcommands = parser.add_subparsers(dest="command", required=True)
+
+    init = subcommands.add_parser("init")
+    entry = init.add_mutually_exclusive_group(required=True)
+    entry.add_argument("--workflow", type=_path)
+    entry.add_argument("--prompt-file", type=_path)
+    init.add_argument("--backchain-root", type=_path)
+    init.add_argument("--run-dir", required=True, type=_path)
+    init.add_argument("--repo", required=True, type=_path)
+    init.add_argument("--isolate", action="store_true")
+
+    next_command = subcommands.add_parser("next")
+    next_command.add_argument("--run-dir", required=True, type=_path)
+
+    accept = subcommands.add_parser("accept-plan")
+    accept.add_argument("--run-dir", required=True, type=_path)
+    accept.add_argument("--action", required=True)
+    accept.add_argument("--plan", required=True, type=_path)
+    accept.add_argument("--bindings", required=True, type=_path)
+
+    execute = subcommands.add_parser("execute")
+    execute.add_argument("--run-dir", required=True, type=_path)
+    execute.add_argument("--action", required=True)
+
+    run = subcommands.add_parser("run")
+    run.add_argument("--run-dir", required=True, type=_path)
+
+    prepare = subcommands.add_parser("prepare-dispatch")
+    prepare.add_argument("--run-dir", required=True, type=_path)
+    prepare.add_argument("--action", required=True)
+
+    dispatch = subcommands.add_parser("dispatch")
+    dispatch.add_argument("--run-dir", required=True, type=_path)
+    dispatch.add_argument("--action", required=True)
+    dispatch.add_argument("--handle", required=True)
+
+    complete = subcommands.add_parser("complete")
+    complete.add_argument("--run-dir", required=True, type=_path)
+    complete.add_argument("--action", required=True)
+    complete.add_argument("--result", required=True, type=_path)
+
+    retry = subcommands.add_parser("retry")
+    retry.add_argument("--run-dir", required=True, type=_path)
+    retry.add_argument("--action", required=True)
+    retry.add_argument("--reason", required=True)
+    retry.add_argument("--confirmed-stopped", action="store_true")
+    return parser
+
+
+def _emit(payload: Any) -> None:
+    print(json.dumps(payload, ensure_ascii=False, allow_nan=False, sort_keys=True))
+
+
+def _dispatch(kernel: WorkflowKernel, arguments: argparse.Namespace) -> dict[str, Any]:
+    command = arguments.command
+    if command == "init":
+        if arguments.workflow is not None:
+            if arguments.backchain_root is not None:
+                raise WorkflowError("--backchain-root is only valid with --prompt-file")
+            return kernel.init_workflow(
+                workflow_file=arguments.workflow,
+                run_dir=arguments.run_dir,
+                repo=arguments.repo,
+                isolate=arguments.isolate,
+            )
+        if arguments.backchain_root is None:
+            raise WorkflowError("--prompt-file requires --backchain-root")
+        return kernel.init_prompt(
+            prompt_file=arguments.prompt_file,
+            backchain_root=arguments.backchain_root,
+            run_dir=arguments.run_dir,
+            repo=arguments.repo,
+            isolate=arguments.isolate,
+        )
+    if command == "next":
+        return kernel.next(run_dir=arguments.run_dir)
+    if command == "accept-plan":
+        return kernel.accept_plan(
+            run_dir=arguments.run_dir,
+            action_id=arguments.action,
+            plan_file=arguments.plan,
+            bindings_file=arguments.bindings,
+        )
+    if command == "execute":
+        return kernel.execute(run_dir=arguments.run_dir, action_id=arguments.action)
+    if command == "run":
+        return kernel.run(run_dir=arguments.run_dir)
+    if command == "prepare-dispatch":
+        return kernel.prepare_dispatch(run_dir=arguments.run_dir, action_id=arguments.action)
+    if command == "dispatch":
+        return kernel.dispatch(
+            run_dir=arguments.run_dir,
+            action_id=arguments.action,
+            handle=arguments.handle,
+        )
+    if command == "complete":
+        return kernel.complete(
+            run_dir=arguments.run_dir,
+            action_id=arguments.action,
+            result_file=arguments.result,
+        )
+    if command == "retry":
+        return kernel.retry(
+            run_dir=arguments.run_dir,
+            action_id=arguments.action,
+            reason=arguments.reason,
+            confirmed_stopped=arguments.confirmed_stopped,
+        )
+    raise WorkflowError(f"unsupported command: {command}")
+
+
+def main(argv: Optional[Sequence[str]] = None) -> int:
+    parser = _build_parser()
+    try:
+        arguments = parser.parse_args(argv)
+        kernel = WorkflowKernel(Path(__file__))
+        _emit(_dispatch(kernel, arguments))
+        return 0
+    except (WorkflowError, OSError, ValueError) as exc:
+        _emit({"status": "error", "error": str(exc)})
+        return 2
+    except KeyboardInterrupt:
+        _emit({"status": "error", "error": "interrupted"})
+        return 130
+    except Exception as exc:  # Never spill a mixed traceback into JSON protocol stdout.
+        _emit({"status": "error", "error": f"internal workflow error: {exc}"})
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

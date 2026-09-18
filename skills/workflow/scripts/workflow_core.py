@@ -1,0 +1,1994 @@
+"""Small, durable, file-backed workflow kernel.
+
+The public surface lives in the sibling :mod:`workflow` CLI.  This module owns
+the state transition rules; callers never select a successor themselves.  It is
+deliberately serial and uses only the Python standard library.
+"""
+
+from __future__ import annotations
+
+import contextlib
+import datetime as _datetime
+import fcntl
+import hashlib
+import json
+import math
+import os
+import signal
+import shutil
+import stat
+import subprocess
+import uuid
+from pathlib import Path, PurePosixPath
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple
+
+import store
+
+
+class WorkflowError(RuntimeError):
+    """A workflow input, state, or transition is invalid."""
+
+
+RUN_SCHEMA = "workflow-run"
+RUN_VERSION = 1
+WORKFLOW_VERSION = 1
+_WORKFLOW_KEYS = {"version", "name", "goal", "steps"}
+_STEP_KEYS = {
+    "id",
+    "kind",
+    "needs",
+    "argv",
+    "prompt",
+    "outputs",
+    "verify",
+    "timeout_seconds",
+    "produces",
+}
+_STEP_KINDS = {"command", "prompt", "agent"}
+_ACTION_STATUSES = {
+    "ready",
+    "executing",
+    "in_doubt",
+    "failed",
+    "blocked",
+    "dispatching",
+    "dispatched",
+}
+
+
+def _now() -> str:
+    return _datetime.datetime.now(tz=_datetime.timezone.utc).isoformat()
+
+
+def _json_default_error(value: Any) -> None:
+    raise TypeError(f"not JSON serializable: {type(value).__name__}")
+
+
+def canonical_json(value: Any) -> str:
+    """Encode JSON deterministically, rejecting NaN and non-JSON values."""
+    try:
+        return json.dumps(
+            value,
+            ensure_ascii=False,
+            allow_nan=False,
+            separators=(",", ":"),
+            sort_keys=True,
+            default=_json_default_error,
+        )
+    except (TypeError, ValueError) as exc:
+        raise WorkflowError(f"value is not canonical JSON: {exc}") from exc
+
+
+def sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def sha256_value(value: Any) -> str:
+    return sha256_text(canonical_json(value))
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    try:
+        with path.open("rb") as handle:
+            for block in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(block)
+    except OSError as exc:
+        raise WorkflowError(f"cannot hash {path}: {exc}") from exc
+    return digest.hexdigest()
+
+
+def _reject_duplicate_keys(pairs: List[Tuple[str, Any]]) -> Dict[str, Any]:
+    result: Dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise WorkflowError(f"duplicate JSON key: {key!r}")
+        result[key] = value
+    return result
+
+
+def _reject_constant(value: str) -> None:
+    raise WorkflowError(f"nonstandard JSON constant: {value}")
+
+
+def parse_json_text(text: str, *, label: str) -> Any:
+    try:
+        return json.loads(
+            text,
+            object_pairs_hook=_reject_duplicate_keys,
+            parse_constant=_reject_constant,
+        )
+    except WorkflowError:
+        raise
+    except (TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise WorkflowError(f"invalid JSON in {label}: {exc}") from exc
+
+
+def _absolute(path: Path, *, label: str, require_exists: bool = False) -> Path:
+    try:
+        resolved = path.expanduser().resolve(strict=require_exists)
+    except (OSError, RuntimeError) as exc:
+        raise WorkflowError(f"cannot resolve {label} {path}: {exc}") from exc
+    if require_exists and not resolved.exists():
+        raise WorkflowError(f"{label} does not exist: {path}")
+    return resolved
+
+
+def _read_text(path: Path, *, label: str) -> str:
+    try:
+        if path.is_symlink() or not path.is_file():
+            raise WorkflowError(f"{label} must be a regular file: {path}")
+        # ``Path.read_text`` opens with universal-newline translation.  Request
+        # files are evidence and planning goals, so preserve CRLF/LF and every
+        # valid Unicode code point exactly as supplied before hashing/freezing.
+        return path.read_bytes().decode("utf-8")
+    except WorkflowError:
+        raise
+    except (OSError, UnicodeError) as exc:
+        raise WorkflowError(f"cannot read {label} {path}: {exc}") from exc
+
+
+def load_document(path: Path, *, label: str) -> Tuple[Any, str]:
+    """Load raw JSON or a Markdown record with one workflow-state fence."""
+    resolved = _absolute(path, label=label, require_exists=True)
+    text = _read_text(resolved, label=label)
+    stripped = text.lstrip("\ufeff\ufeff\n\r\t ")
+    if stripped.startswith("{") or stripped.startswith("["):
+        return parse_json_text(stripped, label=label), text
+    try:
+        return store.loads(text), text
+    except store.StorageError as exc:
+        raise WorkflowError(f"invalid Markdown {label}: {exc}") from exc
+
+
+def _require_string(value: Any, *, label: str, nonempty: bool = True) -> str:
+    if not isinstance(value, str):
+        raise WorkflowError(f"{label} must be a string")
+    if nonempty and not value.strip():
+        raise WorkflowError(f"{label} must be nonempty")
+    return value
+
+
+def _safe_relative_path(value: Any, *, label: str) -> str:
+    path = _require_string(value, label=label)
+    if "\x00" in path or "\\" in path:
+        raise WorkflowError(f"{label} is not a safe relative path: {path!r}")
+    if path.startswith("/"):
+        raise WorkflowError(f"{label} must be relative: {path!r}")
+    parts = path.split("/")
+    if any(part in ("", ".", "..") for part in parts):
+        raise WorkflowError(f"{label} is not a safe relative path: {path!r}")
+    # This also prevents platform-specific drive semantics from escaping when a
+    # manifest is moved from POSIX to Windows.
+    if PurePosixPath(path).is_absolute() or ":" in parts[0]:
+        raise WorkflowError(f"{label} is not a safe relative path: {path!r}")
+    return path
+
+
+def _as_argv(value: Any, *, label: str) -> List[str]:
+    if isinstance(value, (str, bytes)) or not isinstance(value, list) or not value:
+        raise WorkflowError(f"{label} must be a nonempty argv array")
+    argv: List[str] = []
+    for index, item in enumerate(value):
+        argv.append(_require_string(item, label=f"{label}[{index}]") )
+    return argv
+
+
+def _normalise_step(raw: Any, *, index: int, prior_id: Optional[str]) -> Dict[str, Any]:
+    if not isinstance(raw, dict):
+        raise WorkflowError(f"steps[{index}] must be an object")
+    unknown = set(raw).difference(_STEP_KEYS)
+    if unknown:
+        raise WorkflowError(
+            f"steps[{index}] contains unknown fields: {', '.join(sorted(unknown))}"
+        )
+    if "id" not in raw or "kind" not in raw:
+        raise WorkflowError(f"steps[{index}] requires id and kind")
+    step_id = _require_string(raw["id"], label=f"steps[{index}].id")
+    kind = _require_string(raw["kind"], label=f"steps[{index}].kind")
+    if kind not in _STEP_KINDS:
+        raise WorkflowError(f"steps[{index}].kind is unsupported: {kind!r}")
+
+    if "needs" in raw:
+        needs_raw = raw["needs"]
+        if isinstance(needs_raw, (str, bytes)) or not isinstance(needs_raw, list):
+            raise WorkflowError(f"steps[{index}].needs must be an array")
+        needs = [
+            _require_string(item, label=f"steps[{index}].needs[{need_index}]")
+            for need_index, item in enumerate(needs_raw)
+        ]
+        if len(set(needs)) != len(needs):
+            raise WorkflowError(f"steps[{index}].needs contains duplicate IDs")
+    else:
+        needs = [] if prior_id is None else [prior_id]
+
+    outputs_raw = raw.get("outputs", [])
+    if isinstance(outputs_raw, (str, bytes)) or not isinstance(outputs_raw, list):
+        raise WorkflowError(f"steps[{index}].outputs must be an array")
+    outputs = [
+        _safe_relative_path(item, label=f"steps[{index}].outputs[{output_index}]")
+        for output_index, item in enumerate(outputs_raw)
+    ]
+    if len(set(outputs)) != len(outputs):
+        raise WorkflowError(f"steps[{index}].outputs contains duplicate paths")
+
+    verify_raw = raw.get("verify", [])
+    if isinstance(verify_raw, (str, bytes)) or not isinstance(verify_raw, list):
+        raise WorkflowError(f"steps[{index}].verify must be an array of argv arrays")
+    verify = [
+        _as_argv(item, label=f"steps[{index}].verify[{verify_index}]")
+        for verify_index, item in enumerate(verify_raw)
+    ]
+
+    timeout = raw.get("timeout_seconds", 60)
+    if isinstance(timeout, bool) or not isinstance(timeout, (int, float)):
+        raise WorkflowError(f"steps[{index}].timeout_seconds must be a positive number")
+    if not math.isfinite(float(timeout)) or timeout <= 0:
+        raise WorkflowError(f"steps[{index}].timeout_seconds must be a positive finite number")
+
+    produces_raw = raw.get("produces", [])
+    if isinstance(produces_raw, (str, bytes)) or not isinstance(produces_raw, list):
+        raise WorkflowError(f"steps[{index}].produces must be an array")
+    produces = [
+        _require_string(item, label=f"steps[{index}].produces[{produce_index}]")
+        for produce_index, item in enumerate(produces_raw)
+    ]
+
+    step: Dict[str, Any] = {
+        "id": step_id,
+        "kind": kind,
+        "needs": needs,
+        "outputs": outputs,
+        "verify": verify,
+        "timeout_seconds": timeout,
+        "produces": produces,
+    }
+    if kind == "command":
+        if "argv" not in raw:
+            raise WorkflowError(f"steps[{index}] command requires argv")
+        if "prompt" in raw:
+            raise WorkflowError(f"steps[{index}] command may not contain prompt")
+        step["argv"] = _as_argv(raw["argv"], label=f"steps[{index}].argv")
+    else:
+        if "prompt" not in raw:
+            raise WorkflowError(f"steps[{index}] {kind} requires prompt")
+        if "argv" in raw:
+            raise WorkflowError(f"steps[{index}] {kind} may not contain argv")
+        step["prompt"] = _require_string(raw["prompt"], label=f"steps[{index}].prompt")
+        # A host-only step with neither output nor an executable check has no
+        # machine-verifiable completion boundary.
+        if not outputs and not verify:
+            raise WorkflowError(
+                f"steps[{index}] {kind} requires outputs or verify for evidence"
+            )
+    return step
+
+
+def _reject_overlapping_outputs(steps: Sequence[Mapping[str, Any]]) -> None:
+    seen: List[Tuple[Tuple[str, ...], str, str]] = []
+    for step in steps:
+        step_id = str(step["id"])
+        for output in step["outputs"]:
+            parts = tuple(str(output).split("/"))
+            for old_parts, old_path, old_step in seen:
+                shortest = min(len(parts), len(old_parts))
+                if parts[:shortest] == old_parts[:shortest]:
+                    raise WorkflowError(
+                        "declared outputs overlap: "
+                        f"{step_id}:{output} conflicts with {old_step}:{old_path}"
+                    )
+            seen.append((parts, str(output), step_id))
+
+
+def _topological_order(steps: Sequence[Mapping[str, Any]]) -> List[str]:
+    index = {str(step["id"]): position for position, step in enumerate(steps)}
+    remaining = {step_id: set(steps[position]["needs"]) for step_id, position in index.items()}
+    result: List[str] = []
+    while remaining:
+        ready = [step_id for step_id in remaining if not remaining[step_id]]
+        if not ready:
+            raise WorkflowError("workflow dependency graph contains a cycle")
+        ready.sort(key=index.__getitem__)
+        step_id = ready[0]
+        result.append(step_id)
+        del remaining[step_id]
+        for dependencies in remaining.values():
+            dependencies.discard(step_id)
+    return result
+
+
+def normalise_workflow(raw: Any) -> Dict[str, Any]:
+    """Validate and canonicalise frozen workflow document v1."""
+    if not isinstance(raw, dict):
+        raise WorkflowError("workflow must be a JSON object")
+    unknown = set(raw).difference(_WORKFLOW_KEYS)
+    missing = _WORKFLOW_KEYS.difference(raw)
+    if unknown:
+        raise WorkflowError(f"workflow contains unknown fields: {', '.join(sorted(unknown))}")
+    if missing:
+        raise WorkflowError(f"workflow is missing fields: {', '.join(sorted(missing))}")
+    if raw["version"] != WORKFLOW_VERSION:
+        raise WorkflowError(f"workflow version must be {WORKFLOW_VERSION}")
+    name = _require_string(raw["name"], label="workflow.name")
+    goal = _require_string(raw["goal"], label="workflow.goal")
+    steps_raw = raw["steps"]
+    if isinstance(steps_raw, (str, bytes)) or not isinstance(steps_raw, list) or not steps_raw:
+        raise WorkflowError("workflow.steps must be a nonempty array")
+
+    raw_ids: List[str] = []
+    for index, step in enumerate(steps_raw):
+        if not isinstance(step, dict) or "id" not in step:
+            raise WorkflowError(f"steps[{index}] requires id")
+        raw_ids.append(_require_string(step["id"], label=f"steps[{index}].id"))
+    if len(set(raw_ids)) != len(raw_ids):
+        raise WorkflowError("workflow has duplicate step IDs")
+
+    steps = [
+        _normalise_step(step, index=index, prior_id=None if index == 0 else raw_ids[index - 1])
+        for index, step in enumerate(steps_raw)
+    ]
+    ids = {step["id"] for step in steps}
+    for step in steps:
+        missing_needs = set(step["needs"]).difference(ids)
+        if missing_needs:
+            raise WorkflowError(
+                f"step {step['id']!r} needs missing IDs: {', '.join(sorted(missing_needs))}"
+            )
+        if step["id"] in step["needs"]:
+            raise WorkflowError(f"step {step['id']!r} cannot need itself")
+    _topological_order(steps)
+    _reject_overlapping_outputs(steps)
+    return {"version": WORKFLOW_VERSION, "name": name, "goal": goal, "steps": steps}
+
+
+def _step_by_id(workflow: Mapping[str, Any], step_id: str) -> Mapping[str, Any]:
+    for step in workflow["steps"]:
+        if step["id"] == step_id:
+            return step
+    raise WorkflowError(f"state refers to unknown step: {step_id!r}")
+
+
+def _state_without_hash(state: Mapping[str, Any]) -> Dict[str, Any]:
+    return {key: value for key, value in state.items() if key != "state_sha256"}
+
+
+def seal_state(state: Dict[str, Any]) -> None:
+    definition = state.get("definition")
+    if definition is None:
+        state["definition_sha256"] = None
+    else:
+        state["definition_sha256"] = sha256_value(definition)
+    state["state_sha256"] = sha256_value(_state_without_hash(state))
+
+
+def _validate_state(state: Any, run_dir: Path) -> Dict[str, Any]:
+    if not isinstance(state, dict):
+        raise WorkflowError("state.md must contain an object")
+    if state.get("schema") != RUN_SCHEMA or state.get("version") != RUN_VERSION:
+        raise WorkflowError("state.md has an unsupported schema")
+    claimed = state.get("state_sha256")
+    if not isinstance(claimed, str) or claimed != sha256_value(_state_without_hash(state)):
+        raise WorkflowError("state.md hash does not match its contents")
+    if state.get("run_dir") != str(run_dir):
+        raise WorkflowError("state.md belongs to a different run directory")
+    _require_string(state.get("run_id"), label="state.run_id")
+    _require_string(state.get("original_goal"), label="state.original_goal")
+    if not isinstance(state.get("workspace"), str) or not Path(state["workspace"]).is_absolute():
+        raise WorkflowError("state.workspace must be an absolute path")
+    if state.get("status") not in {
+        "planning",
+        "ready",
+        "executing",
+        "in_doubt",
+        "failed",
+        "blocked",
+        "dispatching",
+        "dispatched",
+        "complete",
+    }:
+        raise WorkflowError("state.status is invalid")
+    definition = state.get("definition")
+    if definition is not None:
+        normal = normalise_workflow(definition)
+        if normal != definition:
+            raise WorkflowError("state definition is not normalized")
+        if state.get("definition_sha256") != sha256_value(normal):
+            raise WorkflowError("frozen workflow digest does not match")
+    elif state.get("definition_sha256") is not None:
+        raise WorkflowError("state has a definition hash without a definition")
+    if not isinstance(state.get("completed"), dict):
+        raise WorkflowError("state.completed must be an object")
+    if not isinstance(state.get("callbacks"), dict):
+        raise WorkflowError("state.callbacks must be an object")
+    action = state.get("current_action")
+    if action is not None:
+        if not isinstance(action, dict):
+            raise WorkflowError("state.current_action must be an object or null")
+        _require_string(action.get("id"), label="state.current_action.id")
+        if action.get("status") not in _ACTION_STATUSES and action.get("kind") != "planning":
+            raise WorkflowError("state.current_action.status is invalid")
+        if action.get("kind") == "planning":
+            if definition is not None:
+                raise WorkflowError("planning action cannot have a frozen workflow")
+        else:
+            if definition is None:
+                raise WorkflowError("execution action has no frozen workflow")
+            _require_string(action.get("step_id"), label="state.current_action.step_id")
+            _step_by_id(definition, action["step_id"])
+    if state["status"] == "complete":
+        if action is not None:
+            raise WorkflowError("complete state cannot retain a current action")
+        if definition is None:
+            raise WorkflowError("complete state has no frozen workflow")
+    return state
+
+
+@contextlib.contextmanager
+def run_lock(run_dir: Path) -> Iterator[None]:
+    """Take the single-host advisory lock required for state mutations."""
+    lock_path = run_dir / ".workflow.lock"
+    if lock_path.is_symlink():
+        raise WorkflowError("run lock path may not be a symlink")
+    try:
+        descriptor = os.open(str(lock_path), os.O_RDWR | os.O_CREAT, 0o600)
+    except OSError as exc:
+        raise WorkflowError(f"cannot open run lock: {exc}") from exc
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        yield
+    except OSError as exc:
+        raise WorkflowError(f"cannot lock run directory: {exc}") from exc
+    finally:
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_UN)
+        finally:
+            os.close(descriptor)
+
+
+def _open_execution_lock(run_dir: Path) -> int:
+    """Open the separate live-execution lock without following a symlink."""
+    lock_path = run_dir / ".workflow.executing.lock"
+    if lock_path.is_symlink():
+        raise WorkflowError("execution lock path may not be a symlink")
+    try:
+        return os.open(str(lock_path), os.O_RDWR | os.O_CREAT, 0o600)
+    except OSError as exc:
+        raise WorkflowError(f"cannot open execution lock: {exc}") from exc
+
+
+@contextlib.contextmanager
+def execution_lock(run_dir: Path) -> Iterator[None]:
+    """Hold a process-lifetime flock while a command subprocess is live.
+
+    This lock is intentionally distinct from the short state transaction lock.
+    A cold ``next`` can therefore distinguish a live local executor from a
+    dead CLI that left only a persisted command intent.
+    """
+    descriptor = _open_execution_lock(run_dir)
+    try:
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise WorkflowError("a workflow command is already executing") from exc
+        except OSError as exc:
+            raise WorkflowError(f"cannot lock live command execution: {exc}") from exc
+        try:
+            yield
+        finally:
+            fcntl.flock(descriptor, fcntl.LOCK_UN)
+    finally:
+        os.close(descriptor)
+
+
+def _execution_is_live(run_dir: Path) -> bool:
+    """Probe the process-held executor flock without relying on PID liveness."""
+    descriptor = _open_execution_lock(run_dir)
+    try:
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            return True
+        fcntl.flock(descriptor, fcntl.LOCK_UN)
+        return False
+    except OSError as exc:
+        raise WorkflowError(f"cannot probe live command execution: {exc}") from exc
+    finally:
+        os.close(descriptor)
+
+
+def _relative_to(root: Path, path: Path, *, label: str) -> Path:
+    try:
+        return path.relative_to(root)
+    except ValueError as exc:
+        raise WorkflowError(f"{label} escapes its required root: {path}") from exc
+
+
+def _safe_run_path(run_dir: Path, relative: str) -> Path:
+    _safe_relative_path(relative, label="internal run path")
+    candidate = run_dir / relative
+    resolved = _absolute(candidate, label="internal run path", require_exists=False)
+    _relative_to(run_dir, resolved, label="internal run path")
+    return resolved
+
+
+def _workspace_root(state: Mapping[str, Any]) -> Path:
+    workspace = _absolute(Path(state["workspace"]), label="workspace", require_exists=True)
+    if not workspace.is_dir():
+        raise WorkflowError(f"workspace is not a directory: {workspace}")
+    return workspace
+
+
+def _fingerprint_path(path: Path, workspace: Path) -> Dict[str, Any]:
+    """Capture an output preimage without following an unsafe path."""
+    try:
+        item_stat = path.lstat()
+    except FileNotFoundError:
+        return {"exists": False}
+    except OSError as exc:
+        raise WorkflowError(f"cannot inspect declared output {path}: {exc}") from exc
+    if stat.S_ISLNK(item_stat.st_mode):
+        return {"exists": True, "type": "symlink", "lstat": _stat_fingerprint(item_stat)}
+    if not stat.S_ISREG(item_stat.st_mode):
+        return {"exists": True, "type": "nonregular", "lstat": _stat_fingerprint(item_stat)}
+    resolved = _absolute(path, label="declared output", require_exists=True)
+    _relative_to(workspace, resolved, label="declared output")
+    return {
+        "exists": True,
+        "type": "file",
+        "sha256": sha256_file(path),
+        "stat": _stat_fingerprint(item_stat),
+    }
+
+
+def _stat_fingerprint(item_stat: os.stat_result) -> Dict[str, int]:
+    return {
+        "device": int(item_stat.st_dev),
+        "inode": int(item_stat.st_ino),
+        "size": int(item_stat.st_size),
+        "mtime_ns": int(item_stat.st_mtime_ns),
+        "ctime_ns": int(item_stat.st_ctime_ns),
+    }
+
+
+def _capture_preimages(workspace: Path, outputs: Sequence[str]) -> Dict[str, Dict[str, Any]]:
+    preimages: Dict[str, Dict[str, Any]] = {}
+    for output in outputs:
+        target = workspace / output
+        preimages[output] = _fingerprint_path(target, workspace)
+    return preimages
+
+
+def _execution_argv(argv: Sequence[str], workspace: Path) -> List[str]:
+    """Freeze the executable selected for an action as an absolute argv[0].
+
+    Arguments after argv[0] remain authored data: turning every string that
+    happens to resemble a path into an absolute path would change command
+    semantics (notably ``-c`` programs and tools with path-like flags).
+    """
+    if not argv:
+        raise WorkflowError("execution argv must be nonempty")
+    executable = argv[0]
+    candidate = Path(executable)
+    if candidate.is_absolute():
+        resolved = _absolute(candidate, label="command executable", require_exists=False)
+    elif "/" in executable:
+        resolved = _absolute(workspace / candidate, label="command executable", require_exists=False)
+    else:
+        discovered = shutil.which(executable)
+        resolved = (
+            _absolute(Path(discovered), label="command executable", require_exists=True)
+            if discovered
+            else _absolute(workspace / candidate, label="command executable", require_exists=False)
+        )
+    return [str(resolved), *argv[1:]]
+
+
+def _verified_outputs(
+    workspace: Path,
+    outputs: Sequence[str],
+    preimages: Mapping[str, Any],
+    *,
+    require_changed: bool,
+) -> List[Dict[str, Any]]:
+    evidence: List[Dict[str, Any]] = []
+    for output in outputs:
+        target = workspace / output
+        try:
+            item_stat = target.lstat()
+        except FileNotFoundError as exc:
+            raise WorkflowError(f"declared output is missing: {output}") from exc
+        except OSError as exc:
+            raise WorkflowError(f"cannot inspect declared output {output}: {exc}") from exc
+        if stat.S_ISLNK(item_stat.st_mode) or not stat.S_ISREG(item_stat.st_mode):
+            raise WorkflowError(f"declared output must be a regular non-symlink file: {output}")
+        resolved = _absolute(target, label="declared output", require_exists=True)
+        _relative_to(workspace, resolved, label="declared output")
+        current = {
+            "exists": True,
+            "type": "file",
+            "sha256": sha256_file(target),
+            "stat": _stat_fingerprint(item_stat),
+        }
+        before = preimages.get(output)
+        if require_changed and before == current:
+            raise WorkflowError(
+                f"declared output was not newly created or changed for this attempt: {output}"
+            )
+        evidence.append(
+            {
+                "path": output,
+                "sha256": current["sha256"],
+                "size": current["stat"]["size"],
+                "stat": current["stat"],
+            }
+        )
+    return evidence
+
+
+def _assert_accepted_evidence(state: Mapping[str, Any], run_dir: Path) -> None:
+    """Accepted direct output hashes are immutable across every hydration."""
+    workspace = _workspace_root(state)
+    completed = state.get("completed", {})
+    for step_id, completion in completed.items():
+        if not isinstance(completion, dict):
+            raise WorkflowError(f"completion record is invalid for {step_id}")
+        for output in completion.get("outputs", []):
+            if not isinstance(output, dict) or not isinstance(output.get("path"), str):
+                raise WorkflowError(f"completion output record is invalid for {step_id}")
+            path = output["path"]
+            current = _verified_outputs(workspace, [path], {}, require_changed=False)[0]
+            if current["sha256"] != output.get("sha256"):
+                raise WorkflowError(
+                    f"accepted evidence changed after completion: {step_id}:{path}"
+                )
+        receipt_path = completion.get("receipt_path")
+        receipt_sha256 = completion.get("receipt_sha256")
+        if not isinstance(receipt_path, str) or not isinstance(receipt_sha256, str):
+            raise WorkflowError(f"completion receipt record is invalid for {step_id}")
+        receipt = _safe_run_path(run_dir, receipt_path)
+        if not receipt.exists() or receipt.is_symlink() or not receipt.is_file():
+            raise WorkflowError(f"accepted receipt is missing: {receipt_path}")
+        if sha256_file(receipt) != receipt_sha256:
+            raise WorkflowError(f"accepted receipt changed after completion: {receipt_path}")
+        try:
+            receipt_payload = store.read_record(receipt)
+        except store.StorageError as exc:
+            raise WorkflowError(f"accepted receipt is unreadable: {receipt_path}: {exc}") from exc
+        _assert_receipt_logs(run_dir, receipt_payload, receipt_path)
+
+
+def _assert_receipt_logs(run_dir: Path, receipt: Any, receipt_path: str) -> None:
+    """Verify immutable command/check log hashes claimed by an accepted receipt."""
+    if not isinstance(receipt, dict):
+        raise WorkflowError(f"accepted receipt is not an object: {receipt_path}")
+    log_sets: List[Any] = []
+    command = receipt.get("command")
+    if isinstance(command, dict) and isinstance(command.get("logs"), dict):
+        log_sets.append(command["logs"])
+    checks = receipt.get("checks", [])
+    if not isinstance(checks, list):
+        raise WorkflowError(f"accepted receipt checks are invalid: {receipt_path}")
+    log_sets.extend(checks)
+    for logs in log_sets:
+        if not isinstance(logs, dict):
+            raise WorkflowError(f"accepted log record is invalid: {receipt_path}")
+        for path_key, hash_key in (("stdout_path", "stdout_sha256"), ("stderr_path", "stderr_sha256")):
+            # A receipt that does not claim a log pair does not get an invented
+            # integrity promise; when it does claim one, both are mandatory.
+            has_path = path_key in logs
+            has_hash = hash_key in logs
+            if not has_path and not has_hash:
+                continue
+            if not has_path or not has_hash:
+                raise WorkflowError(f"accepted log record is incomplete: {receipt_path}")
+            relative = logs[path_key]
+            claimed = logs[hash_key]
+            if not isinstance(relative, str) or not isinstance(claimed, str):
+                raise WorkflowError(f"accepted log record is invalid: {receipt_path}")
+            log_path = _safe_run_path(run_dir, relative)
+            if not log_path.exists() or log_path.is_symlink() or not log_path.is_file():
+                raise WorkflowError(f"accepted log is missing: {relative}")
+            if sha256_file(log_path) != claimed:
+                raise WorkflowError(f"accepted log changed after completion: {relative}")
+
+
+def _git_identity(repo: Path) -> Dict[str, Any]:
+    """Freeze lightweight repository identity without requiring Git for all runs."""
+    identity: Dict[str, Any] = {"path": str(repo), "git_head": None}
+    try:
+        outcome = subprocess.run(
+            ["git", "-C", str(repo), "rev-parse", "HEAD"],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return identity
+    if outcome.returncode == 0:
+        candidate = outcome.stdout.strip()
+        if candidate:
+            identity["git_head"] = candidate
+    return identity
+
+
+class WorkflowKernel:
+    """Owns workflow transitions and derives packets from Markdown state."""
+
+    def __init__(self, cli_path: Path):
+        self.cli_path = _absolute(cli_path, label="workflow CLI", require_exists=True)
+
+    # ----- initialization -------------------------------------------------
+
+    def init_workflow(
+        self,
+        *,
+        workflow_file: Path,
+        run_dir: Path,
+        repo: Path,
+        isolate: bool = False,
+    ) -> Dict[str, Any]:
+        raw, source = load_document(workflow_file, label="workflow file")
+        workflow = normalise_workflow(raw)
+        return self._init(
+            run_dir=run_dir,
+            repo=repo,
+            isolate=isolate,
+            original_goal=workflow["goal"],
+            request={
+                "mode": "workflow",
+                "source_path": str(_absolute(workflow_file, label="workflow file", require_exists=True)),
+                "source_sha256": sha256_text(source),
+            },
+            definition=workflow,
+            planner=None,
+        )
+
+    def init_prompt(
+        self,
+        *,
+        prompt_file: Path,
+        backchain_root: Path,
+        run_dir: Path,
+        repo: Path,
+        isolate: bool = False,
+    ) -> Dict[str, Any]:
+        prompt_path = _absolute(prompt_file, label="prompt file", require_exists=True)
+        prompt = _read_text(prompt_path, label="prompt file")
+        if not prompt.strip():
+            raise WorkflowError("prompt file must not be empty")
+        root = _absolute(backchain_root, label="Backchain root", require_exists=True)
+        if not root.is_dir():
+            raise WorkflowError("Backchain root must be a directory")
+        return self._init(
+            run_dir=run_dir,
+            repo=repo,
+            isolate=isolate,
+            original_goal=prompt,
+            request={
+                "mode": "prompt",
+                "prompt_path": str(prompt_path),
+                "prompt_sha256": sha256_text(prompt),
+                "prompt": prompt,
+                "backchain_root": str(root),
+            },
+            definition=None,
+            planner={"backchain_root": str(root)},
+        )
+
+    def _init(
+        self,
+        *,
+        run_dir: Path,
+        repo: Path,
+        isolate: bool,
+        original_goal: str,
+        request: Dict[str, Any],
+        definition: Optional[Dict[str, Any]],
+        planner: Optional[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        target_run = _absolute(run_dir, label="run directory", require_exists=False)
+        if target_run.exists() or target_run.is_symlink():
+            raise WorkflowError(f"init never overwrites an existing run directory: {target_run}")
+        source_repo = _absolute(repo, label="repository", require_exists=True)
+        if not source_repo.is_dir():
+            raise WorkflowError("repository must be a directory")
+        try:
+            target_run.mkdir(parents=True, exist_ok=False)
+        except OSError as exc:
+            raise WorkflowError(f"cannot create run directory {target_run}: {exc}") from exc
+
+        workspace = source_repo
+        isolation: Dict[str, Any] = {"mode": "none"}
+        if isolate:
+            adapter = self._adapters()
+            try:
+                workspace_info = adapter.create_workspace(source_repo, target_run)
+            except Exception as exc:  # AdapterError remains deliberately adapter-owned.
+                raise WorkflowError(f"cannot create isolated workspace: {exc}") from exc
+            if not isinstance(workspace_info, dict) or not isinstance(workspace_info.get("workspace"), str):
+                raise WorkflowError("workspace adapter returned no workspace path")
+            workspace = _absolute(Path(workspace_info["workspace"]), label="isolated workspace", require_exists=True)
+            if not workspace.is_dir():
+                raise WorkflowError("workspace adapter returned a non-directory workspace")
+            isolation = dict(workspace_info)
+
+        state: Dict[str, Any] = {
+            "schema": RUN_SCHEMA,
+            "version": RUN_VERSION,
+            "run_id": uuid.uuid4().hex,
+            "created_at": _now(),
+            "run_dir": str(target_run),
+            "original_goal": original_goal,
+            "request": request,
+            "definition": definition,
+            "definition_sha256": None,
+            "repo": _git_identity(source_repo),
+            "workspace": str(workspace),
+            "isolation": isolation,
+            "planner": planner,
+            "status": "planning" if definition is None else "ready",
+            "current_action": None,
+            "completed": {},
+            "callbacks": {},
+            "attempts": [],
+            "dispatch_history": [],
+            "retry_history": [],
+            "reconciliation": [],
+        }
+        with run_lock(target_run):
+            if definition is None:
+                self._issue_planning_action(state)
+            else:
+                self._issue_next_action(state)
+            return self._persist_locked(target_run, state)
+
+    # ----- loading, storage, recovery -----------------------------------
+
+    def _adapters(self) -> Any:
+        try:
+            import adapters  # Imported only for the adapter-owning operations.
+        except ImportError as exc:
+            raise WorkflowError(f"workflow adapters are unavailable: {exc}") from exc
+        return adapters
+
+    def _load_locked(
+        self,
+        run_dir: Path,
+        *,
+        reconcile: bool,
+        live_execution: bool = False,
+    ) -> Tuple[Dict[str, Any], bool]:
+        try:
+            store.recover(run_dir)
+            state = store.read_record(run_dir / "state.md")
+        except store.StorageError as exc:
+            raise WorkflowError(f"cannot recover workflow state: {exc}") from exc
+        state = _validate_state(state, run_dir)
+        _assert_accepted_evidence(state, run_dir)
+        changed = False
+        action = state.get("current_action")
+        if (
+            reconcile
+            and isinstance(action, dict)
+            and action.get("status") == "executing"
+            and not live_execution
+            and not _execution_is_live(run_dir)
+        ):
+            # A command intent without this live CLI instance is an unknown
+            # outcome.  We never infer that no child survived or replay it.
+            action["status"] = "in_doubt"
+            action["reconciled_at"] = _now()
+            state["status"] = "in_doubt"
+            state["reconciliation"].append(
+                {
+                    "at": _now(),
+                    "action_id": action["id"],
+                    "kind": "command",
+                    "outcome": "in_doubt",
+                    "reason": "persisted command intent requires explicit reconciliation",
+                }
+            )
+            changed = True
+        return state, changed
+
+    def _persist_locked(
+        self,
+        run_dir: Path,
+        state: Dict[str, Any],
+        *,
+        extra_writes: Optional[Mapping[str, str]] = None,
+    ) -> Dict[str, Any]:
+        seal_state(state)
+        packet = self._packet(state, run_dir)
+        writes: Dict[str, str] = {
+            "state.md": store.dumps(state, title="Workflow run"),
+            "packet.md": store.dumps(packet, title="Workflow packet"),
+        }
+        if extra_writes:
+            for path, text in extra_writes.items():
+                if path in writes:
+                    raise WorkflowError(f"attempted to overwrite core record {path}")
+                writes[path] = text
+        try:
+            store.transaction(run_dir, writes)
+        except store.StorageError as exc:
+            raise WorkflowError(f"cannot persist workflow state: {exc}") from exc
+        return packet
+
+    def next(self, *, run_dir: Path) -> Dict[str, Any]:
+        target_run = _absolute(run_dir, label="run directory", require_exists=True)
+        if not target_run.is_dir():
+            raise WorkflowError("run directory must be a directory")
+        with run_lock(target_run):
+            state, changed = self._load_locked(target_run, reconcile=True)
+            if changed:
+                return self._persist_locked(target_run, state)
+            return self._packet(state, target_run)
+
+    # ----- packet rendering ----------------------------------------------
+
+    def _cli(self, command: str, *arguments: str) -> List[str]:
+        return [str(self.cli_path), command, *arguments]
+
+    def _result_path(self, run_dir: Path, action_id: str) -> str:
+        return str(run_dir / "results" / f"{action_id}.json")
+
+    def _plan_paths(self, run_dir: Path, action_id: str) -> Tuple[str, str]:
+        return (
+            str(run_dir / "plans" / f"{action_id}.plan.json"),
+            str(run_dir / "plans" / f"{action_id}.bindings.json"),
+        )
+
+    def _dependencies(self, state: Mapping[str, Any], run_dir: Path, step: Mapping[str, Any]) -> List[Dict[str, str]]:
+        dependencies: List[Dict[str, str]] = []
+        for dependency_id in step["needs"]:
+            completion = state["completed"].get(dependency_id)
+            if not isinstance(completion, dict):
+                raise WorkflowError(f"ready step lacks completion receipt for dependency {dependency_id}")
+            receipt_path = completion.get("receipt_path")
+            receipt_hash = completion.get("receipt_sha256")
+            if not isinstance(receipt_path, str) or not isinstance(receipt_hash, str):
+                raise WorkflowError(f"dependency receipt is invalid for {dependency_id}")
+            dependencies.append(
+                {
+                    "step_id": dependency_id,
+                    "receipt_path": str(_safe_run_path(run_dir, receipt_path)),
+                    "path": str(_safe_run_path(run_dir, receipt_path)),
+                    "sha256": receipt_hash,
+                }
+            )
+        return dependencies
+
+    def _packet(self, state: Mapping[str, Any], run_dir: Path) -> Dict[str, Any]:
+        action = state.get("current_action")
+        recovery_argv = self._cli("next", "--run-dir", str(run_dir))
+        packet: Dict[str, Any] = {
+            "protocol": "workflow-packet-v1",
+            "run_id": state["run_id"],
+            "run_dir": str(run_dir),
+            "goal": state["original_goal"],
+            "original_goal": state["original_goal"],
+            "status": state["status"],
+            "action_id": None,
+            "kind": None,
+            "step_id": None,
+            "workspace": state["workspace"],
+            "prompt": None,
+            "argv": None,
+            "declared_outputs": [],
+            "outputs": [],
+            "direct_dependency_receipts": [],
+            "dependencies": [],
+            "next_argv": recovery_argv,
+            "recovery_argv": recovery_argv,
+            "allowed_operation_argv_templates": {
+                "next": recovery_argv
+            },
+            "allowed_operations": {
+                "next": recovery_argv
+            },
+        }
+        if action is None:
+            if state["status"] == "complete":
+                packet["completion"] = "all declared steps have accepted verified receipts"
+            elif state["status"] == "blocked":
+                packet["blocked_reason"] = state.get("blocked_reason", "no ready step")
+            return packet
+
+        action_id = action["id"]
+        packet.update(
+            {
+                "action_id": action_id,
+                "kind": action["kind"],
+                "step_id": action.get("step_id"),
+                "attempt": action.get("attempt"),
+            }
+        )
+        kind = action["kind"]
+        if kind == "planning":
+            plan_path, bindings_path = self._plan_paths(run_dir, action_id)
+            packet["prompt"] = state["request"]["prompt"]
+            backchain_root = state["request"].get("backchain_root")
+            card = (
+                str(Path(backchain_root) / "skills" / "backchain" / "SKILL.md")
+                if isinstance(backchain_root, str)
+                else "selected Backchain SKILL.md"
+            )
+            packet["planning_instruction"] = (
+                f"Load {card} fully, including its technical lenses and internal convergence "
+                "procedure. Produce its plan schema and separate execution bindings, then "
+                "invoke this exact accept-plan command. Package validation is structural "
+                "only and does not replace the card's semantic convergence."
+            )
+            accept = self._cli(
+                "accept-plan",
+                "--run-dir",
+                str(run_dir),
+                "--action",
+                action_id,
+                "--plan",
+                plan_path,
+                "--bindings",
+                bindings_path,
+            )
+            packet["plan_file"] = plan_path
+            packet["bindings_file"] = bindings_path
+            packet["next_argv"] = accept
+            packet["allowed_operation_argv_templates"] = {
+                "accept_plan": accept,
+            }
+            packet["allowed_operations"] = packet["allowed_operation_argv_templates"]
+            return packet
+
+        definition = state.get("definition")
+        if not isinstance(definition, dict):
+            raise WorkflowError("execution packet has no frozen definition")
+        step = _step_by_id(definition, action["step_id"])
+        dependencies = self._dependencies(state, run_dir, step)
+        packet["declared_outputs"] = list(step["outputs"])
+        packet["outputs"] = list(step["outputs"])
+        packet["direct_dependency_receipts"] = dependencies
+        packet["dependencies"] = dependencies
+        packet["timeout_seconds"] = step["timeout_seconds"]
+        packet["produces"] = list(step["produces"])
+
+        retry = self._cli(
+            "retry",
+            "--run-dir",
+            str(run_dir),
+            "--action",
+            action_id,
+            "--reason",
+            "<reason>",
+            "--confirmed-stopped",
+        )
+        if kind == "command":
+            execution_argv = action.get("execution_argv")
+            if not isinstance(execution_argv, list) or not all(
+                isinstance(item, str) for item in execution_argv
+            ):
+                raise WorkflowError("command action has no frozen execution argv")
+            packet["argv"] = list(execution_argv)
+            execute = self._cli(
+                "execute", "--run-dir", str(run_dir), "--action", action_id
+            )
+            if action["status"] == "ready":
+                packet["next_argv"] = execute
+                packet["allowed_operation_argv_templates"] = {
+                    "execute": execute,
+                    "retry": retry,
+                }
+            else:
+                packet["next_argv"] = self._cli("next", "--run-dir", str(run_dir))
+                packet["allowed_operation_argv_templates"] = {"retry": retry}
+            packet["allowed_operations"] = packet["allowed_operation_argv_templates"]
+            return packet
+
+        packet["prompt"] = step["prompt"]
+        result_path = self._result_path(run_dir, action_id)
+        complete = self._cli(
+            "complete",
+            "--run-dir",
+            str(run_dir),
+            "--action",
+            action_id,
+            "--result",
+            result_path,
+        )
+        if kind == "prompt":
+            packet["result_file"] = result_path
+            if action["status"] == "ready":
+                packet["next_argv"] = complete
+                packet["allowed_operation_argv_templates"] = {
+                    "complete": complete,
+                    "retry": retry,
+                }
+            else:
+                packet["next_argv"] = self._cli("next", "--run-dir", str(run_dir))
+                packet["allowed_operation_argv_templates"] = {"retry": retry}
+            packet["allowed_operations"] = packet["allowed_operation_argv_templates"]
+            return packet
+
+        # Agent dispatch is explicitly host-owned.  The first transition only
+        # reserves the action; it never launches a hidden worker.
+        prepare = self._cli(
+            "prepare-dispatch", "--run-dir", str(run_dir), "--action", action_id
+        )
+        dispatch = self._cli(
+            "dispatch",
+            "--run-dir",
+            str(run_dir),
+            "--action",
+            action_id,
+            "--handle",
+            "<native-handle>",
+        )
+        packet["result_file"] = result_path
+        if action["status"] == "ready":
+            packet["native_dispatch"] = {
+                "state": "unprepared",
+                "instruction": (
+                    "Run prepare-dispatch before any native fresh-context spawn. "
+                    "The host must use the selected ask-agent route, keep this workspace "
+                    "exclusive, forbid nested delegation, and attest the actual handle."
+                ),
+            }
+            packet["next_argv"] = prepare
+            packet["allowed_operation_argv_templates"] = {
+                "prepare_dispatch": prepare,
+                "retry": retry,
+            }
+        elif action["status"] == "dispatching":
+            packet["native_dispatch"] = {
+                "state": "prepared_in_doubt",
+                "instruction": (
+                    "Do not launch a fresh agent from a resumed dispatching packet. "
+                    "Reconcile whether the prepared host spawn occurred; record its handle "
+                    "with dispatch, or fence this action with retry after confirmed stopped."
+                ),
+            }
+            packet["next_argv"] = self._cli("next", "--run-dir", str(run_dir))
+            packet["allowed_operation_argv_templates"] = {
+                "dispatch": dispatch,
+                "retry": retry,
+            }
+        elif action["status"] == "dispatched":
+            packet["native_dispatch"] = {
+                "state": "attested",
+                "handle": action.get("dispatch", {}).get("handle"),
+                "instruction": "Submit the worker result through the exact complete command.",
+            }
+            packet["next_argv"] = complete
+            packet["allowed_operation_argv_templates"] = {
+                "complete": complete,
+                "retry": retry,
+            }
+        else:
+            packet["next_argv"] = self._cli("next", "--run-dir", str(run_dir))
+            packet["allowed_operation_argv_templates"] = {"retry": retry}
+        packet["allowed_operations"] = packet["allowed_operation_argv_templates"]
+        return packet
+
+    # ----- scheduler ------------------------------------------------------
+
+    def _issue_planning_action(self, state: Dict[str, Any]) -> None:
+        if state.get("definition") is not None:
+            raise WorkflowError("cannot issue a planning action after definition freeze")
+        state["current_action"] = {
+            "id": uuid.uuid4().hex,
+            "kind": "planning",
+            "step_id": None,
+            "attempt": 1,
+            "status": "ready",
+            "issued_at": _now(),
+        }
+        state["status"] = "planning"
+
+    def _issue_next_action(self, state: Dict[str, Any]) -> None:
+        if state.get("current_action") is not None:
+            raise WorkflowError("cannot select next action while one is active")
+        workflow = state.get("definition")
+        if not isinstance(workflow, dict):
+            raise WorkflowError("cannot select execution action without frozen workflow")
+        completed = state["completed"]
+        order = _topological_order(workflow["steps"])
+        for step_id in order:
+            if step_id in completed:
+                continue
+            step = _step_by_id(workflow, step_id)
+            if all(need in completed for need in step["needs"]):
+                workspace = _workspace_root(state)
+                prior_attempts = [
+                    item
+                    for item in state["attempts"]
+                    if isinstance(item, dict) and item.get("step_id") == step_id
+                ]
+                attempt = len(prior_attempts) + 1
+                action_id = uuid.uuid4().hex
+                state["current_action"] = {
+                    "id": action_id,
+                    "kind": step["kind"],
+                    "step_id": step_id,
+                    "attempt": attempt,
+                    "status": "ready",
+                    "issued_at": _now(),
+                    "execution_argv": _execution_argv(step["argv"], workspace)
+                    if step["kind"] == "command"
+                    else None,
+                    "output_preimages": _capture_preimages(workspace, step["outputs"]),
+                }
+                state["attempts"].append(
+                    {
+                        "action_id": action_id,
+                        "step_id": step_id,
+                        "kind": step["kind"],
+                        "attempt": attempt,
+                        "issued_at": state["current_action"]["issued_at"],
+                        "status": "ready",
+                    }
+                )
+                state["status"] = "ready"
+                state.pop("blocked_reason", None)
+                return
+        if len(completed) == len(workflow["steps"]):
+            state["status"] = "complete"
+            state["current_action"] = None
+            state.pop("blocked_reason", None)
+            return
+        state["status"] = "blocked"
+        state["blocked_reason"] = "no dependency-ready step exists"
+
+    def _require_current_action(
+        self,
+        state: Mapping[str, Any],
+        action_id: str,
+        *,
+        kind: Optional[str] = None,
+        statuses: Optional[Sequence[str]] = None,
+    ) -> Dict[str, Any]:
+        action = state.get("current_action")
+        if not isinstance(action, dict) or action.get("id") != action_id:
+            raise WorkflowError("action identity is stale or does not belong to this run")
+        if kind is not None and action.get("kind") != kind:
+            raise WorkflowError(f"action {action_id} is not a {kind} action")
+        if statuses is not None and action.get("status") not in set(statuses):
+            raise WorkflowError(
+                f"action {action_id} is {action.get('status')}, not one of {', '.join(statuses)}"
+            )
+        return action
+
+    def _attempt(self, state: Dict[str, Any], action_id: str) -> Dict[str, Any]:
+        for item in reversed(state["attempts"]):
+            if isinstance(item, dict) and item.get("action_id") == action_id:
+                return item
+        raise WorkflowError(f"state has no attempt record for action {action_id}")
+
+    # ----- planning -------------------------------------------------------
+
+    def accept_plan(
+        self,
+        *,
+        run_dir: Path,
+        action_id: str,
+        plan_file: Path,
+        bindings_file: Path,
+    ) -> Dict[str, Any]:
+        target_run = _absolute(run_dir, label="run directory", require_exists=True)
+        plan, plan_text = load_document(plan_file, label="Backchain plan")
+        bindings, bindings_text = load_document(bindings_file, label="execution bindings")
+        if not isinstance(plan, dict) or not isinstance(bindings, dict):
+            raise WorkflowError("Backchain plan and execution bindings must be JSON objects")
+        with run_lock(target_run):
+            state, changed = self._load_locked(target_run, reconcile=True)
+            if changed:
+                self._persist_locked(target_run, state)
+            action = self._require_current_action(
+                state, action_id, kind="planning", statuses=("ready",)
+            )
+            if state["request"].get("mode") != "prompt":
+                raise WorkflowError("accept-plan is only valid for prompt-initialized runs")
+            if plan.get("goal") != state["original_goal"]:
+                raise WorkflowError("Backchain plan goal does not match the frozen original request")
+            backchain_root = state["request"].get("backchain_root")
+            if not isinstance(backchain_root, str):
+                raise WorkflowError("planning state has no selected Backchain root")
+            staging = target_run / "planning" / f"staging-{action_id}"
+            if staging.exists() or staging.is_symlink():
+                raise WorkflowError("Backchain staging path already exists for this action")
+            adapter = self._adapters()
+            try:
+                compiled, provenance = adapter.compile_backchain(
+                    Path(backchain_root), plan, bindings, staging
+                )
+            except Exception as exc:
+                raise WorkflowError(f"Backchain plan compilation failed: {exc}") from exc
+            workflow = normalise_workflow(compiled)
+            if workflow["goal"] != state["original_goal"]:
+                raise WorkflowError("compiled workflow goal does not match the frozen original request")
+            # Ensure the adapter did not return a non-persistable provenance object.
+            canonical_json(provenance)
+            plan_relative = f"planning/{action_id}.plan.json"
+            bindings_relative = f"planning/{action_id}.bindings.json"
+            state["definition"] = workflow
+            state["planner"] = {
+                "action_id": action_id,
+                "accepted_at": _now(),
+                "plan_path": plan_relative,
+                "plan_sha256": sha256_text(plan_text),
+                "bindings_path": bindings_relative,
+                "bindings_sha256": sha256_text(bindings_text),
+                "provenance": provenance,
+            }
+            state["current_action"] = None
+            state["status"] = "ready"
+            self._issue_next_action(state)
+            return self._persist_locked(
+                target_run,
+                state,
+                extra_writes={plan_relative: plan_text, bindings_relative: bindings_text},
+            )
+
+    # ----- host dispatch and completion ----------------------------------
+
+    def prepare_dispatch(self, *, run_dir: Path, action_id: str) -> Dict[str, Any]:
+        target_run = _absolute(run_dir, label="run directory", require_exists=True)
+        with run_lock(target_run):
+            state, changed = self._load_locked(target_run, reconcile=True)
+            if changed:
+                self._persist_locked(target_run, state)
+            action = self._require_current_action(
+                state, action_id, kind="agent", statuses=("ready",)
+            )
+            action["status"] = "dispatching"
+            action["dispatch"] = {
+                "prepared_at": _now(),
+                "attestation": "host-native spawn not yet attested",
+            }
+            state["status"] = "dispatching"
+            self._attempt(state, action_id).update(
+                {"status": "dispatching", "prepared_at": action["dispatch"]["prepared_at"]}
+            )
+            persisted = self._persist_locked(target_run, state)
+            # ``packet.md`` stays the conservative recovered view: if the host
+            # dies after this response, it must reconcile rather than spawn a
+            # second worker.  This first direct response is the one-time launch
+            # authorization for the host that just durably prepared the action.
+            response = dict(persisted)
+            dispatch = self._cli(
+                "dispatch",
+                "--run-dir",
+                str(target_run),
+                "--action",
+                action_id,
+                "--handle",
+                "<native-handle>",
+            )
+            response["native_dispatch"] = {
+                "state": "launch_once",
+                "instruction": (
+                    "Launch exactly one native fresh-context agent now using the selected "
+                    "ask-agent route, explicit workspace ownership, and no nested delegation. "
+                    "After confirmed launch, attest its real handle with the dispatch callback."
+                ),
+            }
+            response["next_argv"] = dispatch
+            templates = dict(response["allowed_operation_argv_templates"])
+            templates["dispatch"] = dispatch
+            response["allowed_operation_argv_templates"] = templates
+            response["allowed_operations"] = templates
+            return response
+
+    def dispatch(self, *, run_dir: Path, action_id: str, handle: str) -> Dict[str, Any]:
+        target_run = _absolute(run_dir, label="run directory", require_exists=True)
+        handle = _require_string(handle, label="native dispatch handle")
+        with run_lock(target_run):
+            state, changed = self._load_locked(target_run, reconcile=True)
+            if changed:
+                self._persist_locked(target_run, state)
+            action = self._require_current_action(state, action_id, kind="agent")
+            dispatch_info = action.get("dispatch") if isinstance(action.get("dispatch"), dict) else {}
+            if action.get("status") == "dispatched":
+                if dispatch_info.get("handle") == handle:
+                    return self._packet(state, target_run)
+                raise WorkflowError("native dispatch handle conflicts with the recorded receipt")
+            if action.get("status") != "dispatching":
+                raise WorkflowError("dispatch requires prepare-dispatch before host spawn")
+            receipt = {
+                "prepared_at": dispatch_info.get("prepared_at"),
+                "received_at": _now(),
+                "handle": handle,
+                "attestation": "trusted host attestation; provider launch is not independently validated",
+            }
+            action["dispatch"] = receipt
+            action["status"] = "dispatched"
+            state["status"] = "dispatched"
+            state["dispatch_history"].append({"action_id": action_id, **receipt})
+            self._attempt(state, action_id).update(
+                {"status": "dispatched", "dispatch": receipt}
+            )
+            return self._persist_locked(target_run, state)
+
+    def complete(self, *, run_dir: Path, action_id: str, result_file: Path) -> Dict[str, Any]:
+        target_run = _absolute(run_dir, label="run directory", require_exists=True)
+        result, result_text = load_document(result_file, label="result file")
+        if not isinstance(result, dict):
+            raise WorkflowError("result file must contain an object")
+        expected_result_keys = {"status", "summary"}
+        if set(result) != expected_result_keys:
+            raise WorkflowError("result file may contain only status and summary")
+        status = result.get("status")
+        if status not in {"succeeded", "failed", "blocked"}:
+            raise WorkflowError("result status must be succeeded, failed, or blocked")
+        _require_string(result.get("summary"), label="result.summary")
+        result_digest = sha256_value(result)
+        raw_result_digest = sha256_text(result_text)
+
+        with run_lock(target_run):
+            state, changed = self._load_locked(target_run, reconcile=True)
+            if changed:
+                self._persist_locked(target_run, state)
+            prior_callback = state["callbacks"].get(action_id)
+            if isinstance(prior_callback, dict):
+                if prior_callback.get("result_sha256") != result_digest:
+                    raise WorkflowError("callback replay conflicts with previously accepted result")
+                return self._packet(state, target_run)
+
+            action = self._require_current_action(state, action_id)
+            if action.get("kind") == "command":
+                raise WorkflowError("a command action cannot use complete; use execute")
+            if action.get("kind") not in {"prompt", "agent"}:
+                raise WorkflowError("complete is not valid for this action kind")
+            if action["kind"] == "agent":
+                if action.get("status") != "dispatched" or not isinstance(
+                    action.get("dispatch"), dict
+                ) or not action["dispatch"].get("handle"):
+                    raise WorkflowError("agent completion requires a recorded native dispatch handle")
+            elif action.get("status") != "ready":
+                raise WorkflowError("prompt action is not ready for completion")
+
+            definition = state["definition"]
+            step = _step_by_id(definition, action["step_id"])
+            workspace = _workspace_root(state)
+            output_evidence: List[Dict[str, Any]] = []
+            checks: List[Dict[str, Any]] = []
+            if status == "succeeded":
+                checks_result = self._run_checks(
+                    target_run, action_id, step["verify"], workspace, step["timeout_seconds"]
+                )
+                checks = checks_result["entries"]
+                if checks_result["in_doubt"]:
+                    action["status"] = "in_doubt"
+                    state["status"] = "in_doubt"
+                    self._attempt(state, action_id).update(
+                        {"status": "in_doubt", "checks": checks}
+                    )
+                    return self._persist_locked(target_run, state)
+                if not checks_result["ok"]:
+                    raise WorkflowError("declared verification command failed; result was not accepted")
+                # Verifiers are executable trusted input.  They might mutate a
+                # current output or an earlier accepted dependency, so evidence
+                # must be collected only after checks and the dependency ledger
+                # must be revalidated immediately before success acceptance.
+                _assert_accepted_evidence(state, target_run)
+                output_evidence = _verified_outputs(
+                    workspace,
+                    step["outputs"],
+                    action.get("output_preimages", {}),
+                    require_changed=True,
+                )
+
+            receipt = {
+                "schema": "workflow-receipt",
+                "version": 1,
+                "action_id": action_id,
+                "step_id": action["step_id"],
+                "kind": action["kind"],
+                "accepted_at": _now(),
+                "result": result,
+                "result_sha256": result_digest,
+                "result_raw_sha256": raw_result_digest,
+                "outputs": output_evidence,
+                "checks": checks,
+                "dispatch": action.get("dispatch"),
+            }
+            receipt_relative = f"receipts/{action_id}.md"
+            receipt_text = store.dumps(receipt, title=f"Workflow receipt {action['step_id']}")
+            receipt_hash = sha256_text(receipt_text)
+            state["callbacks"][action_id] = {
+                "result_sha256": result_digest,
+                "result_raw_sha256": raw_result_digest,
+                "receipt_path": receipt_relative,
+                "receipt_sha256": receipt_hash,
+                "status": status,
+            }
+            attempt = self._attempt(state, action_id)
+            attempt.update({"status": status, "result_sha256": result_digest, "checks": checks})
+            if status == "succeeded":
+                state["completed"][action["step_id"]] = {
+                    "action_id": action_id,
+                    "receipt_path": receipt_relative,
+                    "receipt_sha256": receipt_hash,
+                    "outputs": output_evidence,
+                    "completed_at": receipt["accepted_at"],
+                }
+                state["current_action"] = None
+                state["status"] = "ready"
+                self._issue_next_action(state)
+            else:
+                action["status"] = status
+                action["callback"] = {"receipt_path": receipt_relative, "receipt_sha256": receipt_hash}
+                state["status"] = status
+            return self._persist_locked(
+                target_run, state, extra_writes={receipt_relative: receipt_text}
+            )
+
+    # ----- command execution --------------------------------------------
+
+    def _log_paths(self, run_dir: Path, action_id: str, suffix: str) -> Tuple[Path, Path, str, str]:
+        stdout_relative = f"logs/{action_id}.{suffix}.stdout.log"
+        stderr_relative = f"logs/{action_id}.{suffix}.stderr.log"
+        return (
+            _safe_run_path(run_dir, stdout_relative),
+            _safe_run_path(run_dir, stderr_relative),
+            stdout_relative,
+            stderr_relative,
+        )
+
+    def _run_process(
+        self,
+        *,
+        argv: Sequence[str],
+        cwd: Path,
+        stdout_path: Path,
+        stderr_path: Path,
+    ) -> Tuple[Optional[subprocess.Popen[bytes]], Optional[str]]:
+        try:
+            stdout_path.parent.mkdir(parents=True, exist_ok=True)
+            with stdout_path.open("wb") as stdout_handle, stderr_path.open("wb") as stderr_handle:
+                try:
+                    process = subprocess.Popen(
+                        list(argv),
+                        cwd=str(cwd),
+                        stdin=subprocess.DEVNULL,
+                        stdout=stdout_handle,
+                        stderr=stderr_handle,
+                        start_new_session=True,
+                    )
+                except OSError as exc:
+                    stderr_handle.write(f"workflow could not start process: {exc}\n".encode("utf-8"))
+                    stderr_handle.flush()
+                    os.fsync(stderr_handle.fileno())
+                    return None, str(exc)
+                return process, None
+        except OSError as exc:
+            raise WorkflowError(f"cannot create command log files: {exc}") from exc
+
+    def _wait_process(self, process: subprocess.Popen[bytes], timeout: float) -> Dict[str, Any]:
+        try:
+            returncode = process.wait(timeout=float(timeout))
+            return {"returncode": returncode, "timed_out": False}
+        except subprocess.TimeoutExpired:
+            try:
+                os.killpg(process.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            except OSError:
+                pass
+            try:
+                process.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                except OSError:
+                    pass
+                try:
+                    process.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    pass
+            return {"returncode": process.returncode, "timed_out": True}
+
+    def _log_evidence(self, run_dir: Path, stdout_relative: str, stderr_relative: str) -> Dict[str, Any]:
+        stdout_path = _safe_run_path(run_dir, stdout_relative)
+        stderr_path = _safe_run_path(run_dir, stderr_relative)
+        return {
+            "stdout_path": stdout_relative,
+            "stdout_sha256": sha256_file(stdout_path),
+            "stderr_path": stderr_relative,
+            "stderr_sha256": sha256_file(stderr_path),
+        }
+
+    def _run_checks(
+        self,
+        run_dir: Path,
+        action_id: str,
+        checks: Sequence[Sequence[str]],
+        workspace: Path,
+        timeout: float,
+    ) -> Dict[str, Any]:
+        entries: List[Dict[str, Any]] = []
+        for index, argv in enumerate(checks):
+            stdout_path, stderr_path, stdout_relative, stderr_relative = self._log_paths(
+                run_dir, action_id, f"verify-{index}"
+            )
+            process, start_error = self._run_process(
+                argv=argv,
+                cwd=workspace,
+                stdout_path=stdout_path,
+                stderr_path=stderr_path,
+            )
+            if process is None:
+                evidence = self._log_evidence(run_dir, stdout_relative, stderr_relative)
+                entry: Dict[str, Any] = {"argv": list(argv), **evidence}
+                entry.update({"returncode": None, "start_error": start_error})
+                entries.append(entry)
+                return {"ok": False, "in_doubt": False, "entries": entries}
+            outcome = self._wait_process(process, timeout)
+            # The child owns these file descriptors.  Hash only after it exits,
+            # otherwise a valid verifier can be recorded with hashes for empty
+            # or partial logs.
+            evidence = self._log_evidence(run_dir, stdout_relative, stderr_relative)
+            entry = {"argv": list(argv), **evidence}
+            entry.update(outcome)
+            entries.append(entry)
+            if outcome["timed_out"]:
+                return {"ok": False, "in_doubt": True, "entries": entries}
+            if outcome["returncode"] != 0:
+                return {"ok": False, "in_doubt": False, "entries": entries}
+        return {"ok": True, "in_doubt": False, "entries": entries}
+
+    def _finish_command_problem(
+        self,
+        run_dir: Path,
+        state: Dict[str, Any],
+        action: Dict[str, Any],
+        *,
+        status: str,
+        reason: str,
+        logs: Dict[str, Any],
+        checks: Optional[List[Dict[str, Any]]] = None,
+    ) -> Dict[str, Any]:
+        action["status"] = status
+        action["failure"] = {"at": _now(), "reason": reason, "logs": logs, "checks": checks or []}
+        state["status"] = status
+        attempt = self._attempt(state, action["id"])
+        attempt.update(
+            {
+                "status": status,
+                "finished_at": action["failure"]["at"],
+                "reason": reason,
+                "logs": logs,
+                "checks": checks or [],
+            }
+        )
+        return self._persist_locked(run_dir, state)
+
+    def execute(self, *, run_dir: Path, action_id: str) -> Dict[str, Any]:
+        target_run = _absolute(run_dir, label="run directory", require_exists=True)
+        with execution_lock(target_run):
+            return self._execute_live(target_run, action_id)
+
+    def _execute_live(self, target_run: Path, action_id: str) -> Dict[str, Any]:
+        # Record an intent while the process-held execution flock is already
+        # taken.  A concurrent next can now render a live executing packet
+        # without mistaking this deliberate lock release for a crashed CLI.
+        with run_lock(target_run):
+            state, changed = self._load_locked(
+                target_run, reconcile=True, live_execution=True
+            )
+            if changed:
+                self._persist_locked(target_run, state)
+            action = self._require_current_action(
+                state, action_id, kind="command", statuses=("ready",)
+            )
+            step = _step_by_id(state["definition"], action["step_id"])
+            workspace = _workspace_root(state)
+            execution_argv = action.get("execution_argv")
+            if not isinstance(execution_argv, list) or not all(
+                isinstance(item, str) for item in execution_argv
+            ):
+                raise WorkflowError("command action has no frozen execution argv")
+            action["status"] = "executing"
+            action["launch"] = {
+                "phase": "intent",
+                "intent_at": _now(),
+                "argv": list(execution_argv),
+                "cwd": str(workspace),
+            }
+            state["status"] = "executing"
+            self._attempt(state, action_id).update(
+                {"status": "executing", "launch": dict(action["launch"])}
+            )
+            self._persist_locked(target_run, state)
+            stdout_path, stderr_path, stdout_relative, stderr_relative = self._log_paths(
+                target_run, action_id, "command"
+            )
+
+        process, start_error = self._run_process(
+            argv=execution_argv,
+            cwd=workspace,
+            stdout_path=stdout_path,
+            stderr_path=stderr_path,
+        )
+        if process is None:
+            with run_lock(target_run):
+                state, _ = self._load_locked(
+                    target_run, reconcile=False, live_execution=True
+                )
+                action = self._require_current_action(
+                    state, action_id, kind="command", statuses=("executing",)
+                )
+                logs = self._log_evidence(target_run, stdout_relative, stderr_relative)
+                return self._finish_command_problem(
+                    target_run,
+                    state,
+                    action,
+                    status="failed",
+                    reason=f"command did not start: {start_error}",
+                    logs=logs,
+                )
+
+        # Persist PID/PGID immediately after Popen so recovery has a concrete
+        # launch identity.  The pre-Popen intent remains the conservative edge.
+        try:
+            pgid = os.getpgid(process.pid)
+        except OSError:
+            pgid = process.pid
+        with run_lock(target_run):
+            state, _ = self._load_locked(
+                target_run, reconcile=False, live_execution=True
+            )
+            current = state.get("current_action")
+            if not isinstance(current, dict) or current.get("id") != action_id or current.get("status") != "executing":
+                # Another caller reconciled the persisted intent.  Kill the
+                # child rather than leave an untracked process writing files.
+                try:
+                    os.killpg(pgid, signal.SIGTERM)
+                except OSError:
+                    pass
+                return self._packet(state, target_run)
+            launch = {
+                "phase": "spawned",
+                "intent_at": current["launch"]["intent_at"],
+                "started_at": _now(),
+                "pid": process.pid,
+                "pgid": pgid,
+                "argv": list(execution_argv),
+                "cwd": str(workspace),
+            }
+            current["launch"] = launch
+            self._attempt(state, action_id).update({"launch": dict(launch)})
+            self._persist_locked(target_run, state)
+
+        outcome = self._wait_process(process, float(step["timeout_seconds"]))
+        with run_lock(target_run):
+            state, _ = self._load_locked(
+                target_run, reconcile=False, live_execution=True
+            )
+            action = self._require_current_action(
+                state, action_id, kind="command", statuses=("executing",)
+            )
+            logs = self._log_evidence(target_run, stdout_relative, stderr_relative)
+            if outcome["timed_out"]:
+                return self._finish_command_problem(
+                    target_run,
+                    state,
+                    action,
+                    status="in_doubt",
+                    reason="command timeout; effects require explicit reconciliation",
+                    logs=logs,
+                )
+            if outcome["returncode"] != 0:
+                return self._finish_command_problem(
+                    target_run,
+                    state,
+                    action,
+                    status="failed",
+                    reason=f"command exited with status {outcome['returncode']}",
+                    logs=logs,
+                )
+            checks_result = self._run_checks(
+                target_run, action_id, step["verify"], workspace, step["timeout_seconds"]
+            )
+            checks = checks_result["entries"]
+            if checks_result["in_doubt"]:
+                return self._finish_command_problem(
+                    target_run,
+                    state,
+                    action,
+                    status="in_doubt",
+                    reason="verification timeout; effects require explicit reconciliation",
+                    logs=logs,
+                    checks=checks,
+                )
+            if not checks_result["ok"]:
+                return self._finish_command_problem(
+                    target_run,
+                    state,
+                    action,
+                    status="failed",
+                    reason="declared verification command failed",
+                    logs=logs,
+                    checks=checks,
+                )
+            try:
+                # Re-evaluate both old accepted outputs and this attempt's
+                # declared files after arbitrary verifier commands finish.
+                _assert_accepted_evidence(state, target_run)
+                output_evidence = _verified_outputs(
+                    workspace,
+                    step["outputs"],
+                    action.get("output_preimages", {}),
+                    require_changed=True,
+                )
+            except WorkflowError as exc:
+                return self._finish_command_problem(
+                    target_run,
+                    state,
+                    action,
+                    status="failed",
+                    reason=str(exc),
+                    logs=logs,
+                    checks=checks,
+                )
+            receipt = {
+                "schema": "workflow-receipt",
+                "version": 1,
+                "action_id": action_id,
+                "step_id": action["step_id"],
+                "kind": "command",
+                "accepted_at": _now(),
+                "command": {
+                    "argv": list(execution_argv),
+                    "returncode": outcome["returncode"],
+                    "launch": action.get("launch"),
+                    "logs": logs,
+                },
+                "outputs": output_evidence,
+                "checks": checks,
+            }
+            receipt_relative = f"receipts/{action_id}.md"
+            receipt_text = store.dumps(receipt, title=f"Workflow receipt {action['step_id']}")
+            receipt_hash = sha256_text(receipt_text)
+            state["completed"][action["step_id"]] = {
+                "action_id": action_id,
+                "receipt_path": receipt_relative,
+                "receipt_sha256": receipt_hash,
+                "outputs": output_evidence,
+                "completed_at": receipt["accepted_at"],
+            }
+            state["callbacks"][action_id] = {
+                "result_sha256": sha256_value({"status": "succeeded", "command": True}),
+                "receipt_path": receipt_relative,
+                "receipt_sha256": receipt_hash,
+                "status": "succeeded",
+            }
+            self._attempt(state, action_id).update(
+                {
+                    "status": "succeeded",
+                    "finished_at": receipt["accepted_at"],
+                    "logs": logs,
+                    "checks": checks,
+                    "receipt_path": receipt_relative,
+                }
+            )
+            state["current_action"] = None
+            state["status"] = "ready"
+            self._issue_next_action(state)
+            return self._persist_locked(
+                target_run, state, extra_writes={receipt_relative: receipt_text}
+            )
+
+    def run(self, *, run_dir: Path) -> Dict[str, Any]:
+        """Run only ready command steps; stop at every host-owned boundary."""
+        target_run = _absolute(run_dir, label="run directory", require_exists=True)
+        while True:
+            with run_lock(target_run):
+                state, changed = self._load_locked(target_run, reconcile=True)
+                if changed:
+                    packet = self._persist_locked(target_run, state)
+                else:
+                    packet = self._packet(state, target_run)
+                action = state.get("current_action")
+                should_execute = (
+                    state.get("status") == "ready"
+                    and isinstance(action, dict)
+                    and action.get("kind") == "command"
+                    and action.get("status") == "ready"
+                )
+                action_id = action["id"] if should_execute else None
+            if not should_execute:
+                return packet
+            self.execute(run_dir=target_run, action_id=action_id)
+
+    # ----- explicit reconciliation ---------------------------------------
+
+    def retry(
+        self,
+        *,
+        run_dir: Path,
+        action_id: str,
+        reason: str,
+        confirmed_stopped: bool,
+    ) -> Dict[str, Any]:
+        target_run = _absolute(run_dir, label="run directory", require_exists=True)
+        reason = _require_string(reason, label="retry reason")
+        if not confirmed_stopped:
+            raise WorkflowError("retry requires --confirmed-stopped caller attestation")
+        with run_lock(target_run):
+            state, changed = self._load_locked(target_run, reconcile=True)
+            if changed:
+                self._persist_locked(target_run, state)
+            action = self._require_current_action(state, action_id)
+            retryable = {"failed", "blocked", "in_doubt", "dispatching", "dispatched"}
+            if action.get("status") not in retryable:
+                raise WorkflowError("retry only reconciles failed, blocked, in-doubt, or dispatch actions")
+            old_action = dict(action)
+            state["retry_history"].append(
+                {
+                    "at": _now(),
+                    "old_action_id": action_id,
+                    "step_id": action.get("step_id"),
+                    "reason": reason,
+                    "confirmed_stopped": True,
+                    "attestation": "caller attestation only; the engine cannot prove a worker stopped",
+                    "preserved_artifacts": {
+                        "launch": old_action.get("launch"),
+                        "dispatch": old_action.get("dispatch"),
+                        "failure": old_action.get("failure"),
+                    },
+                }
+            )
+            if action.get("kind") == "planning":
+                state["current_action"] = None
+                self._issue_planning_action(state)
+                return self._persist_locked(target_run, state)
+            # New action issuance records current output preimages, so retry
+            # cannot silently accept artifacts left by the fenced attempt.
+            state["current_action"] = None
+            state["status"] = "ready"
+            self._issue_next_action(state)
+            return self._persist_locked(target_run, state)
+
+
+__all__ = [
+    "RUN_SCHEMA",
+    "RUN_VERSION",
+    "WorkflowError",
+    "WorkflowKernel",
+    "canonical_json",
+    "load_document",
+    "normalise_workflow",
+    "parse_json_text",
+    "sha256_file",
+    "sha256_text",
+    "sha256_value",
+]

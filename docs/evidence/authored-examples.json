@@ -1,0 +1,25 @@
+[
+  {
+    "example": "serial",
+    "status": "complete",
+    "cold_resume_status": "complete",
+    "workspace_files": [
+      "numbers.csv",
+      "report.json",
+      "verification.txt"
+    ],
+    "run_dir": ".runs/example-serial/run"
+  },
+  {
+    "example": "diamond",
+    "status": "complete",
+    "cold_resume_status": "complete",
+    "workspace_files": [
+      "a.txt",
+      "b.txt",
+      "c.txt",
+      "joined.txt"
+    ],
+    "run_dir": ".runs/example-diamond/run"
+  }
+]

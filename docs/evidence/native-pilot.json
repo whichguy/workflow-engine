@@ -1,0 +1,40 @@
+{
+  "status": "complete",
+  "run_id": "94a14c589fb54701a4f1bd29809f2e14",
+  "trace": [
+    "planning",
+    "S1:command",
+    "S2:agent",
+    "S3:command",
+    "complete"
+  ],
+  "backchain": "real package-only validation; native planning companion records two inline qualifying reviews",
+  "native_agent": {
+    "task": "report.json creation",
+    "status": "SUCCEEDED",
+    "native_agent_type": "scoped-implementer",
+    "role_substitution": "none",
+    "collection": "native completion delivered after bounded native join",
+    "result": {
+      "count": 3,
+      "sum": 10
+    }
+  },
+  "cold_resume_complete": true,
+  "duplicate_agent_callback_complete": true,
+  "outputs_unchanged_by_recovery_and_replay": true,
+  "source_clean": true,
+  "source_head": "d80b4d6dd657a5153b6809e4044f3dbcd46c42a2",
+  "output_sha256": {
+    "numbers.csv": "47919faa811c0fb6b9de1df114c464bac01749a6dfa3ccb8b3cba73ca126e0e0",
+    "report.json": "e53b8e6746739a452930a788a05cab020f04cdd986c30c922d7b1135dad25d12",
+    "verification.txt": "3f928927fbb8a6c5b453c7181ecf1443c7a3fa8a4f92ab994bd3ea45e60d8ba6"
+  },
+  "run_directory": ".runs/prompt-pilot/run",
+  "limits": [
+    "one Codex native-agent session",
+    "serial executor",
+    "clean Git worktree; no merge",
+    "full ShipLoop consumer not migrated"
+  ]
+}

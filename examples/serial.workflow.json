@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "name": "numbers-report",
+  "goal": "Create and verify a small numbers report",
+  "steps": [
+    {
+      "id": "collect",
+      "kind": "command",
+      "argv": ["python3", "-c", "from pathlib import Path; Path('numbers.csv').write_text('2\\n3\\n5\\n')"],
+      "outputs": ["numbers.csv"]
+    },
+    {
+      "id": "summarize",
+      "kind": "command",
+      "argv": ["python3", "-c", "import json; from pathlib import Path; numbers=[int(x) for x in Path('numbers.csv').read_text().splitlines()]; Path('report.json').write_text(json.dumps({'count':len(numbers),'sum':sum(numbers)}))"],
+      "outputs": ["report.json"]
+    },
+    {
+      "id": "verify",
+      "kind": "command",
+      "argv": ["python3", "-c", "import json; from pathlib import Path; report=json.loads(Path('report.json').read_text()); assert report == {'count':3,'sum':10}; Path('verification.txt').write_text('PASS: 3 numbers total 10\\n')"],
+      "outputs": ["verification.txt"]
+    }
+  ]
+}

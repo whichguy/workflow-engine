@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "name": "dependency-join",
+  "goal": "Demonstrate a join that waits for both direct prerequisites",
+  "steps": [
+    {"id":"A","kind":"command","needs":[],"argv":["python3","-c","from pathlib import Path; Path('a.txt').write_text('source')"],"outputs":["a.txt"]},
+    {"id":"B","kind":"command","needs":["A"],"argv":["python3","-c","from pathlib import Path; Path('b.txt').write_text(Path('a.txt').read_text()+'-left')"],"outputs":["b.txt"]},
+    {"id":"C","kind":"command","needs":["A"],"argv":["python3","-c","from pathlib import Path; Path('c.txt').write_text(Path('a.txt').read_text()+'-right')"],"outputs":["c.txt"]},
+    {"id":"D","kind":"command","needs":["B","C"],"argv":["python3","-c","from pathlib import Path; assert Path('b.txt').is_file() and Path('c.txt').is_file(); Path('joined.txt').write_text(Path('b.txt').read_text()+' | '+Path('c.txt').read_text())"],"outputs":["joined.txt"]}
+  ]
+}

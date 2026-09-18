@@ -1,0 +1,11 @@
+{
+  "skills/workflow/scripts/adapters.py": "56277e6984febbc4452a936612693f881c1b3e87019e656f3336138c3e1859ef",
+  "skills/workflow/scripts/store.py": "744588f6e18c91ba144529ea4134c6a82258128427b25bc047e3cb3ee4c4388c",
+  "skills/workflow/scripts/workflow_core.py": "0d3505e7abd6ddeae62f4a8f31416e057a8ef8d496d9db344a3d423909439a5a",
+  "skills/workflow/scripts/workflow": "5972f078b26feb607799907ccad31089ab323c61c23f343ed2060fa1cf77b9e3",
+  "skills/workflow/SKILL.md": "ad1eb6ac3a561e4827b97c66f19fbe8016459a7d5ca9eec761a3ea7c39ce12d1",
+  "tests/test_adapters.py": "2043b876db22a6e3b1810a0bd45cdb92075b3aa8829389f8b9d67ac43c818f29",
+  "tests/test_engine.py": "688ffe0193b83ec4aa65a699579e730bcaf4fad30c55bda75821173313f1705c",
+  "tests/test_prompt_entry.py": "e1a3a659a6d9d168e3c16a1f899e86d900b8ec552af9b292d601fc13b6ba1f66",
+  "tests/test_store.py": "3c060b726abfb40f2de67b5a89bd8bcbb750252e4f1511ad220f3c632431d192"
+}

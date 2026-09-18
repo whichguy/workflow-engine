@@ -1,0 +1,1 @@
+Create numbers.csv with the integers 2, 3, and 5, one per line. Have a native agent read that file and create report.json with count and sum fields. Finally, run a script that verifies count is 3 and sum is 10 and writes verification.txt. Preserve the input and report as separate immutable evidence files.

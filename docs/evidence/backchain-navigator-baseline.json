@@ -1,0 +1,98 @@
+{
+  "passed": 17,
+  "failed": 0,
+  "concurrency_rounds": 30,
+  "concurrent_done_calls": 60,
+  "join_claim_contenders": 240,
+  "negative_controls": {
+    "lost_completions": 1,
+    "duplicate_dispatches": 2
+  },
+  "results": [
+    {
+      "name": "negative control: unprotected completions lose one of two updates",
+      "passed": true,
+      "duration_ms": 55
+    },
+    {
+      "name": "negative control: ready responses without claims dispatch D twice",
+      "passed": true,
+      "duration_ms": 54
+    },
+    {
+      "name": "cold start, fork, partial join, final verification sink",
+      "passed": true,
+      "duration_ms": 620
+    },
+    {
+      "name": "eager starts do not wait for unrelated depth peers",
+      "passed": true,
+      "duration_ms": 203
+    },
+    {
+      "name": "fresh worker packets separate host delegation and preserve accepted input evidence",
+      "passed": true,
+      "duration_ms": 379
+    },
+    {
+      "name": "initial evidence and per-step unresolved gates preserve independent work",
+      "passed": true,
+      "duration_ms": 335
+    },
+    {
+      "name": "invalid graphs rejected; open goals prevent false complete",
+      "passed": true,
+      "duration_ms": 265
+    },
+    {
+      "name": "duplicate claims reconcile; changed request identity rejects",
+      "passed": true,
+      "duration_ms": 305
+    },
+    {
+      "name": "exact done replay is idempotent; conflicts, false outputs and cross-run tokens reject",
+      "passed": true,
+      "duration_ms": 478
+    },
+    {
+      "name": "released attempt fences stale completion; pending work is not success",
+      "passed": true,
+      "duration_ms": 433
+    },
+    {
+      "name": "boundary: a hash-valid attestation does not prove semantic work",
+      "passed": true,
+      "duration_ms": 204
+    },
+    {
+      "name": "changed graph and changed accepted evidence fail closed",
+      "passed": true,
+      "duration_ms": 388
+    },
+    {
+      "name": "post-claim upstream evidence drift rejects completion without committing it",
+      "passed": true,
+      "duration_ms": 321
+    },
+    {
+      "name": "concurrent initialization permits only one immutable run",
+      "passed": true,
+      "duration_ms": 126
+    },
+    {
+      "name": "interrupted initialization fails closed and can restart in a fresh directory",
+      "passed": true,
+      "duration_ms": 502
+    },
+    {
+      "name": "30 true-process races retain B/C and grant one D claim to eight contenders",
+      "passed": true,
+      "duration_ms": 21697
+    },
+    {
+      "name": "crash before/after commit: orphan lock stops writers; retry reconciles saved claim",
+      "passed": true,
+      "duration_ms": 598
+    }
+  ]
+}

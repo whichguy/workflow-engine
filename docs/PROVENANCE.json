@@ -1,0 +1,14 @@
+{
+  "source": "/Users/dadleet/src/skill-craft/skills/shiploop/scripts/shiploop_store.py",
+  "source_sha256": "1f099a8f4e900ad3fe69f26c879ef30b89237876f7432b5848a557f204c65f1c",
+  "source_git_head": "004447fd395d1820332cf454c9f966c4c85f63fe",
+  "source_kind": "current worktree snapshot; may contain uncommitted changes",
+  "destination": "skills/workflow/scripts/store.py",
+  "changes": [
+    "ShipLoop names to Workflow",
+    "shiploop-state fence to workflow-state",
+    "shiploop-transaction schema to workflow-transaction"
+  ],
+  "license": "MIT",
+  "destination_sha256": "744588f6e18c91ba144529ea4134c6a82258128427b25bc047e3cb3ee4c4388c"
+}
