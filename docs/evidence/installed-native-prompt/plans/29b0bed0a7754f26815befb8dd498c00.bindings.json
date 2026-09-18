@@ -1,0 +1,138 @@
+{
+  "S1": {
+    "kind": "command",
+    "argv": [
+      "python3",
+      "-c",
+      "from pathlib import Path; Path('seed.txt').write_text('alpha\\nbeta\\n', encoding='utf-8')"
+    ],
+    "outputs": ["seed.txt"],
+    "verify": [
+      [
+        "python3",
+        "-c",
+        "from pathlib import Path; assert Path('seed.txt').read_text(encoding='utf-8') == 'alpha\\nbeta\\n'"
+      ]
+    ],
+    "timeout_seconds": 30
+  },
+  "S2": {
+    "kind": "command",
+    "argv": [
+      "python3",
+      "-c",
+      "from pathlib import Path; words=Path('seed.txt').read_text(encoding='utf-8').splitlines(); assert words == ['alpha', 'beta']; Path('words.txt').write_text('\\n'.join(word.upper() for word in words) + '\\n', encoding='utf-8')"
+    ],
+    "outputs": ["words.txt"],
+    "verify": [
+      [
+        "python3",
+        "-c",
+        "from pathlib import Path; assert Path('words.txt').read_text(encoding='utf-8') == 'ALPHA\\nBETA\\n'"
+      ]
+    ],
+    "timeout_seconds": 30
+  },
+  "S3": {
+    "kind": "command",
+    "argv": [
+      "python3",
+      "-c",
+      "from pathlib import Path; words=Path('seed.txt').read_text(encoding='utf-8').splitlines(); assert words == ['alpha', 'beta']; Path('count.txt').write_text(f'{len(words)}\\n', encoding='utf-8')"
+    ],
+    "outputs": ["count.txt"],
+    "verify": [
+      [
+        "python3",
+        "-c",
+        "from pathlib import Path; assert Path('count.txt').read_text(encoding='utf-8') == '2\\n'"
+      ]
+    ],
+    "timeout_seconds": 30
+  },
+  "S4": {
+    "kind": "command",
+    "argv": [
+      "python3",
+      "-c",
+      "from pathlib import Path; words=Path('words.txt').read_text(encoding='utf-8'); count=Path('count.txt').read_text(encoding='utf-8'); assert words == 'ALPHA\\nBETA\\n' and count == '2\\n'; Path('report.txt').write_text('WORDS\\n' + words + 'COUNT\\n' + count, encoding='utf-8')"
+    ],
+    "outputs": ["report.txt"],
+    "verify": [
+      [
+        "python3",
+        "-c",
+        "from pathlib import Path; assert Path('report.txt').read_text(encoding='utf-8') == 'WORDS\\nALPHA\\nBETA\\nCOUNT\\n2\\n'"
+      ]
+    ],
+    "timeout_seconds": 30
+  },
+  "S5": {
+    "kind": "command",
+    "argv": [
+      "python3",
+      "-c",
+      "from pathlib import Path; report=Path('report.txt').read_text(encoding='utf-8'); assert report == 'WORDS\\nALPHA\\nBETA\\nCOUNT\\n2\\n'; Path('summary.txt').write_text('Summary: ALPHA, BETA (2 words)\\n', encoding='utf-8')"
+    ],
+    "outputs": ["summary.txt"],
+    "verify": [
+      [
+        "python3",
+        "-c",
+        "from pathlib import Path; assert Path('summary.txt').read_text(encoding='utf-8') == 'Summary: ALPHA, BETA (2 words)\\n'"
+      ]
+    ],
+    "timeout_seconds": 30
+  },
+  "S6": {
+    "kind": "command",
+    "argv": [
+      "python3",
+      "-c",
+      "from pathlib import Path; report=Path('report.txt').read_text(encoding='utf-8'); assert report == 'WORDS\\nALPHA\\nBETA\\nCOUNT\\n2\\n'; Path('audit.txt').write_text('Audit: report contains uppercase alpha and beta and count 2\\n', encoding='utf-8')"
+    ],
+    "outputs": ["audit.txt"],
+    "verify": [
+      [
+        "python3",
+        "-c",
+        "from pathlib import Path; assert Path('audit.txt').read_text(encoding='utf-8') == 'Audit: report contains uppercase alpha and beta and count 2\\n'"
+      ]
+    ],
+    "timeout_seconds": 30
+  },
+  "S7": {
+    "kind": "command",
+    "argv": [
+      "python3",
+      "-c",
+      "import json; from pathlib import Path; report=Path('report.txt').read_text(encoding='utf-8'); summary=Path('summary.txt').read_text(encoding='utf-8'); assert report == 'WORDS\\nALPHA\\nBETA\\nCOUNT\\n2\\n'; assert summary == 'Summary: ALPHA, BETA (2 words)\\n'; Path('summary.verification.json').write_text(json.dumps({'file': 'summary.txt', 'status': 'verified', 'report': 'report.txt'}, sort_keys=True) + '\\n', encoding='utf-8')"
+    ],
+    "outputs": ["summary.verification.json"],
+    "verify": [
+      [
+        "python3",
+        "-c",
+        "import json; from pathlib import Path; assert json.loads(Path('summary.verification.json').read_text(encoding='utf-8')) == {'file': 'summary.txt', 'report': 'report.txt', 'status': 'verified'}"
+      ]
+    ],
+    "timeout_seconds": 30
+  },
+  "S8": {
+    "kind": "command",
+    "argv": [
+      "python3",
+      "-c",
+      "import json; from pathlib import Path; report=Path('report.txt').read_text(encoding='utf-8'); audit=Path('audit.txt').read_text(encoding='utf-8'); assert report == 'WORDS\\nALPHA\\nBETA\\nCOUNT\\n2\\n'; assert audit == 'Audit: report contains uppercase alpha and beta and count 2\\n'; Path('audit.verification.json').write_text(json.dumps({'file': 'audit.txt', 'status': 'verified', 'report': 'report.txt'}, sort_keys=True) + '\\n', encoding='utf-8')"
+    ],
+    "outputs": ["audit.verification.json"],
+    "verify": [
+      [
+        "python3",
+        "-c",
+        "import json; from pathlib import Path; assert json.loads(Path('audit.verification.json').read_text(encoding='utf-8')) == {'file': 'audit.txt', 'report': 'report.txt', 'status': 'verified'}"
+      ]
+    ],
+    "timeout_seconds": 30
+  }
+}

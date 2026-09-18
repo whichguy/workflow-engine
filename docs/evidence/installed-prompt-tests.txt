@@ -1,0 +1,14 @@
+test_changed_goal_does_not_replace_the_planning_action (test_prompt_entry.PromptEntryTests.test_changed_goal_does_not_replace_the_planning_action) ... ok
+test_prompt_entry_preserves_crlf_and_unicode_bytes (test_prompt_entry.PromptEntryTests.test_prompt_entry_preserves_crlf_and_unicode_bytes) ... ok
+test_prompt_to_real_backchain_package_to_verified_execution (test_prompt_entry.PromptEntryTests.test_prompt_to_real_backchain_package_to_verified_execution) ... ok
+test_braid_prompt_packages_real_backchain_graph_and_executes_two_joins (test_prompt_examples.PromptExampleTests.test_braid_prompt_packages_real_backchain_graph_and_executes_two_joins)
+An authored prompt imports both fan-out/fan-in dependency boundaries. ... ok
+test_confetti_prompt_waits_for_the_withheld_terminal_callback (test_prompt_examples.PromptExampleTests.test_confetti_prompt_waits_for_the_withheld_terminal_callback)
+A terminal fork completes only after both independently declared leaves succeed. ... ok
+test_rejects_a_complex_plan_with_a_missing_execution_binding_without_freezing_it (test_prompt_examples.PromptExampleTests.test_rejects_a_complex_plan_with_a_missing_execution_binding_without_freezing_it)
+Package validation gates graph activation before any step can run. ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 5.781s
+
+OK

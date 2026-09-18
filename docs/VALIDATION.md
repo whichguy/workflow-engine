@@ -22,6 +22,42 @@ not a claim that a marketplace-hosted model performed the workflow. Public CI
 does not have the private Backchain checkout; its integration cases report skips.
 See [distribution qualification](DISTRIBUTION.md) for fresh host installation.
 
+Published code candidate `219e290` passed four CI jobs across macOS/Linux and
+Python 3.10/3.13. Each job passed 89 cases and explicitly skipped the 13 private
+Backchain integration cases. Those cases passed in the full local 102-test run.
+
+Fresh Codex and Claude installations each executed the authored Braid to terminal
+completion with unchanged cold-recovery hashes. Six prompt-entry tests used the
+installed Codex Weave/Backchain pair; the installed Claude pair also passed the
+Braid prompt case. These fixture plans are authored, not model-generated.
+The selected installed Until Loop ran its actual ephemeral lifecycle through
+terminal completion and state deletion. [Consumer evidence](evidence/marketplace-candidate.json).
+
+The installed Codex native smoke launched **Installed Alpha** and **Installed
+Beta** with fresh `worker` contexts, no inherited history and no role substitution.
+Both returned `SUCCEEDED`; the parent collected actual native completion notices,
+checked their bytes, and submitted each callback. After Alpha acceptance, Beta
+remained required and status was `dispatched`; only Beta acceptance produced
+`complete`. Both are disposable-output tasks with no Git integration. Collection
+had no rejected calls or remaining workers. This smoke used ask-agent source
+`05c3329`; a subsequently updated card is identified separately in the dependency
+audit. [Native receipt](evidence/installed-native-confetti.json).
+
+A fresh **Installed Planner** worker subsequently followed the installed Backchain
+0.3.4 and Until Loop 0.4.0-rc.2 procedure for a new prompt. It retained the actual
+Until Loop terminal packet, two distinct domain reviews, exact source/candidate
+hashes and explicit Python bindings. The parent collected its `SUCCEEDED` result,
+checked the artifacts, submitted the issued `accept-plan` callback and executed
+all eight commands. After S7's summary verification, S8's audit verification
+remained ready; only S8 acceptance returned `complete`. Final file contents passed
+independent checks, and a cold read preserved all run/output hashes and mtimes.
+Native type: `worker`; no role substitution, collection error or outstanding worker.
+[Retained prompt run](evidence/installed-native-prompt/result.json) and
+[unaltered artifact manifest](evidence/installed-native-prompt/manifest.json).
+This is one native planning case followed by serial command execution, not a
+cross-host model-quality benchmark. Structural validation does not independently
+prove the truth of semantic reviews.
+
 ## Prior adversarial validation
 
 **91 tests passed in 69.522 seconds, with zero failures or skips.** This adds 38
@@ -210,7 +246,7 @@ new processes recovered them as complete. Their artifacts are retained locally
 under `.runs/example-serial` and `.runs/example-diamond`.
 See [the example results](evidence/authored-examples.json).
 
-## Native prompt-entry pilot
+## Historical native prompt-entry pilot
 
 The original request asked for three integers, a native-agent report, and a final
 script verification. The actual sequence was:
@@ -222,6 +258,9 @@ script verification. The actual sequence was:
    records two distinct inline qualifying reviews and the loaded lens/source
    context. Those are native semantic-review attestations, not an independent
    model benchmark or a property proven by the packaging script.
+   This historical inline-review record does not satisfy the current Backchain
+   requirement for a retained selected Until Loop terminal receipt. The newer
+   installed prompt run above exercises that current procedure explicitly.
 3. The parent submitted the script's exact `accept-plan` argv. The runtime invoked
    real Backchain package-only validation and froze the resulting workflow.
 4. The runtime executed S1 and wrote `numbers.csv` containing `2`, `3`, `5`.
@@ -261,10 +300,12 @@ tool provenance and adapter/core evidence requirements. The final regression
 suite exercises the discovered runtime failures. Review is bounded and is not
 a claim of exhaustive correctness.
 
-The standard skill quick-validator could not start because the system Python
-lacks PyYAML. The skill frontmatter parsed and passed required-field validation
+At this historical stage the quick-validator's selected Python lacked PyYAML.
+The skill frontmatter parsed and passed required-field validation
 with the available Ruby YAML parser; no dependency was installed. Runtime tests
 exercise the bundled scripts, not automatic skill discovery on every host.
+The marketplace release later used `/usr/bin/python3`, which already has PyYAML,
+to validate both generated manifests successfully.
 
 This is one macOS/Codex native-agent pilot using local files and a clean Git
 fixture. It does not establish Claude/Grok/Hermes execution, native-handle recovery

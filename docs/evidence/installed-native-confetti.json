@@ -1,0 +1,34 @@
+{
+  "source_commit": "219e290b731a9bf48b807f7fcb239eb298bb5758",
+  "installed_workflow_version": "0.2.0",
+  "selected_ask_agent_version": "0.3.0",
+  "host": "Codex",
+  "native_type": "worker",
+  "fork_turns": "none",
+  "role_substitutions": "none",
+  "workers": [
+    {
+      "task": "Installed Alpha",
+      "status": "SUCCEEDED",
+      "native_handle": "/root/installed_alpha",
+      "output_sha256": "1921b918b15842c7fdb115078e610263fac85f159c1d8e0ecec3d89a0faa4005"
+    },
+    {
+      "task": "Installed Beta",
+      "status": "SUCCEEDED",
+      "native_handle": "/root/installed_beta",
+      "output_sha256": "a0d89cbe67e84a23d7de399463e2e9a6fb702a6c8acaab0dcdf36b32c2656d82"
+    }
+  ],
+  "after_first_acceptance": {
+    "status": "dispatched",
+    "remaining_required": [
+      "beta"
+    ]
+  },
+  "terminal_status": "complete",
+  "collection": "actual native completion notifications; no rejected collection calls; no remaining workers",
+  "integration": "not applicable; disposable declared output artifacts only",
+  "selected_ask_agent_source_commit": "05c33295bc9f9623f3a8844c4d8bc68346f59f1e",
+  "selected_ask_agent_card_sha256": "4ac0eb3f701f07d78d4bb2f96bd7a0fa7131cd48910582df3a6794befa6345ce"
+}

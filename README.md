@@ -54,6 +54,16 @@ conditional and reused; Weave does not bundle their skill bodies or auto-install
 them. See [dependency selection](skills/workflow/references/dependencies.md) and
 [distribution qualification](docs/DISTRIBUTION.md).
 
+For a portable skill-directory install, reuse skill-craft's existing installer:
+
+```sh
+/path/to/skill-craft/install.sh --from /path/to/workflow-engine/skills/workflow
+```
+
+Its `--dry-run` was checked for Claude, Grok, Codex, Cursor and Hermes. That
+qualifies the install routing; native execution still depends on each host's
+available delegation and collection tools.
+
 ## What we care about
 
 | Value | Observable behavior |

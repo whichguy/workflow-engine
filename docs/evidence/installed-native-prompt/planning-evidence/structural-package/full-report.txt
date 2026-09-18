@@ -1,0 +1,139 @@
+════════════════════════════════════════════════════════════
+FULL BACKCHAIN (exhaustive — every step and relation)
+════════════════════════════════════════════════════════════
+Goal: Create seed.txt with the two lines alpha and beta. Independently create words.txt with those words in uppercase and count.txt with the number of words. Combine both into report.txt. Then independently create summary.txt and audit.txt from the report. Verify both final files. Use only local file operations and explicit Python commands; preserve every required branch.
+
+Initial state (facts true before any step):
+  (none)
+
+Steps (8):
+
+── depth 0 ──
+[S1] (seed) seed.txt contains exactly the two requested source lines.
+  produces:
+    · “seed.txt contains exactly the lines alpha and beta”
+  inputs: (none)
+
+── depth 1 ──
+[S2] (seed) words.txt contains the uppercase form of the two seed words.
+  produces:
+    · “words.txt contains ALPHA and BETA on separate lines”
+  inputs:
+    · need “seed.txt contains exactly the lines alpha and beta” ← “seed.txt contains exactly the two requested…” [S1]
+
+[S3] (seed) count.txt records the number of seed words.
+  produces:
+    · “count.txt records the word count 2”
+  inputs:
+    · need “seed.txt contains exactly the lines alpha and beta” ← “seed.txt contains exactly the two requested…” [S1]
+
+── depth 2 ──
+[S4] (seed) report.txt combines the uppercase words and their count.
+  produces:
+    · “report.txt combines the uppercase words and count”
+  inputs:
+    · need “words.txt contains ALPHA and BETA on separate lines” ← “words.txt contains the uppercase form of the…” [S2]
+    · need “count.txt records the word count 2” ← “count.txt records the number of seed words.” [S3]
+
+── depth 3 ──
+[S5] (seed) summary.txt is derived from report.txt.
+  produces:
+    · “summary.txt is derived from report.txt”
+  inputs:
+    · need “report.txt combines the uppercase words and count” ← “report.txt combines the uppercase words and…” [S4]
+
+[S6] (seed) audit.txt is derived from report.txt.
+  produces:
+    · “audit.txt is derived from report.txt”
+  inputs:
+    · need “report.txt combines the uppercase words and count” ← “report.txt combines the uppercase words and…” [S4]
+
+── depth 4 ──
+[S7] (seed) summary.txt has been verified against report.txt.
+  produces:
+    · “summary.txt has been verified against report.txt”
+  inputs:
+    · need “summary.txt is derived from report.txt” ← “summary.txt is derived from report.txt.” [S5]
+    · need “report.txt combines the uppercase words and count” ← “report.txt combines the uppercase words and…” [S4]
+
+[S8] (seed) audit.txt has been verified against report.txt.
+  produces:
+    · “audit.txt has been verified against report.txt”
+  inputs:
+    · need “audit.txt is derived from report.txt” ← “audit.txt is derived from report.txt.” [S6]
+    · need “report.txt combines the uppercase words and count” ← “report.txt combines the uppercase words and…” [S4]
+
+Depth waves (same-depth may start together; not resource-aware):
+Same-depth steps may still contend for files, migrations, or review capacity.
+
+  depth 0:
+    “seed.txt contains exactly the two requested source lines.” [S1]
+  depth 1:
+    “words.txt contains the uppercase form of the two seed words.” [S2]
+    “count.txt records the number of seed words.” [S3]
+  depth 2:
+    “report.txt combines the uppercase words and their count.” [S4]
+  depth 3:
+    “summary.txt is derived from report.txt.” [S5]
+    “audit.txt is derived from report.txt.” [S6]
+  depth 4:
+    “summary.txt has been verified against report.txt.” [S7]
+    “audit.txt has been verified against report.txt.” [S8]
+
+Longest dependency chain (by step count; ties broken deterministically):
+  “seed.txt contains exactly the two…” [S1] → “words.txt contains the uppercase form…” [S2] → “report.txt combines the uppercase…” [S4] → “summary.txt is derived from report.txt.” [S5] → “summary.txt has been verified against…” [S7]  (5 steps)
+  ids: S1 → S2 → S4 → S5 → S7
+
+Committed edges (supplier → consumer):
+  “seed.txt contains exactly the two…” [S1] → “words.txt contains the uppercase form…” [S2]  via need “seed.txt contains exactly the lines alpha and beta”
+  “seed.txt contains exactly the two…” [S1] → “count.txt records the number of seed…” [S3]  via need “seed.txt contains exactly the lines alpha and beta”
+  “words.txt contains the uppercase form…” [S2] → “report.txt combines the uppercase…” [S4]  via need “words.txt contains ALPHA and BETA on separate lines”
+  “count.txt records the number of seed…” [S3] → “report.txt combines the uppercase…” [S4]  via need “count.txt records the word count 2”
+  “report.txt combines the uppercase…” [S4] → “summary.txt is derived from report.txt.” [S5]  via need “report.txt combines the uppercase words and count”
+  “report.txt combines the uppercase…” [S4] → “audit.txt is derived from report.txt.” [S6]  via need “report.txt combines the uppercase words and count”
+  “report.txt combines the uppercase…” [S4] → “summary.txt has been verified against…” [S7]  via need “report.txt combines the uppercase words and count”
+  “report.txt combines the uppercase…” [S4] → “audit.txt has been verified against…” [S8]  via need “report.txt combines the uppercase words and count”
+  “summary.txt is derived from report.txt.” [S5] → “summary.txt has been verified against…” [S7]  via need “summary.txt is derived from report.txt”
+  “audit.txt is derived from report.txt.” [S6] → “audit.txt has been verified against…” [S8]  via need “audit.txt is derived from report.txt”
+
+Forward fidelity walk (multi-root → multi-sink OK; relationship readiness):
+  roots: “seed.txt contains exactly the two…” [S1]
+  sinks: “summary.txt has been verified against…” [S7] · “audit.txt has been verified against…” [S8]
+  status: ok
+
+  depth 0:
+    “seed.txt contains exactly the two requested source…” [S1]
+      ← —
+      → produces “seed.txt contains exactly the lines alpha and beta”
+  depth 1:
+    “words.txt contains the uppercase form of the two seed…” [S2]
+      ← “seed.txt contains exactly the two…” [S1] (exact) need “seed.txt contains exactly the lines alpha and beta”
+      → produces “words.txt contains ALPHA and BETA on separate lines”
+    “count.txt records the number of seed words.” [S3]
+      ← “seed.txt contains exactly the two…” [S1] (exact) need “seed.txt contains exactly the lines alpha and beta”
+      → produces “count.txt records the word count 2”
+  depth 2:
+    “report.txt combines the uppercase words and their count.” [S4]
+      ← “words.txt contains the uppercase form…” [S2] (exact) need “words.txt contains ALPHA and BETA on separate lines”
+      ← “count.txt records the number of seed…” [S3] (exact) need “count.txt records the word count 2”
+      → produces “report.txt combines the uppercase words and count”
+  depth 3:
+    “summary.txt is derived from report.txt.” [S5]
+      ← “report.txt combines the uppercase…” [S4] (exact) need “report.txt combines the uppercase words and count”
+      → produces “summary.txt is derived from report.txt”
+    “audit.txt is derived from report.txt.” [S6]
+      ← “report.txt combines the uppercase…” [S4] (exact) need “report.txt combines the uppercase words and count”
+      → produces “audit.txt is derived from report.txt”
+  depth 4:
+    “summary.txt has been verified against report.txt.” [S7]
+      ← “summary.txt is derived from report.txt.” [S5] (exact) need “summary.txt is derived from report.txt”
+      ← “report.txt combines the uppercase…” [S4] (exact) need “report.txt combines the uppercase words and count”
+      → produces “summary.txt has been verified against report.txt”
+    “audit.txt has been verified against report.txt.” [S8]
+      ← “audit.txt is derived from report.txt.” [S6] (exact) need “audit.txt is derived from report.txt”
+      ← “report.txt combines the uppercase…” [S4] (exact) need “report.txt combines the uppercase words and count”
+      → produces “audit.txt has been verified against report.txt”
+
+inv-7 diagnostics: (none)
+
+validateStructure.ok=true completionStatus=complete inv6_ok=true only_inv7=false

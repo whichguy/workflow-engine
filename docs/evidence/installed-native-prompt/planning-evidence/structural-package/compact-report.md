@@ -1,0 +1,22 @@
+# COMPACT BACKCHAIN
+
+Goal: Create seed.txt with the two lines alpha and beta. Independently create words.txt with those words in uppercase and count.txt with the number of words. Combine both into report.txt. Then independently create summary.txt and audit.txt from the report. Verify both final files. Use only local file operations and explicit Python commands; preserve every required branch.
+
+| Step | Work | Needs | Conditions |
+| --- | --- | --- | --- |
+| S1 | seed.txt contains exactly the two requested source lines. | — | — |
+| S2 | words.txt contains the uppercase form of the two seed words. | S1 | — |
+| S3 | count.txt records the number of seed words. | S1 | — |
+| S4 | report.txt combines the uppercase words and their count. | S2, S3 | — |
+| S5 | summary.txt is derived from report.txt. | S4 | — |
+| S6 | audit.txt is derived from report.txt. | S4 | — |
+| S7 | summary.txt has been verified against report.txt. | S5, S4 | — |
+| S8 | audit.txt has been verified against report.txt. | S6, S4 | — |
+
+Needs lists direct supplier IDs; all listed suppliers must finish. A dash means no supplier steps, not verified readiness.
+Parallel candidates by depth: [S2, S3]; [S5, S6]; [S7, S8].
+Depth groups are conservative; start only after the step's inputs and unresolved prerequisites are satisfied. File/resource conflicts require separate coordination.
+
+validateStructure.ok=true completionStatus=complete
+Forward fidelity: ok; semantic warnings: 0 (advisory).
+Planning status does not prove execution or completion. See full-report.txt for detail and handoff.json for exact inputs, artifacts, matches and outputs.

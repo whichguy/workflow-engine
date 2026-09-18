@@ -1,0 +1,15 @@
+{
+  "bindings_sha256": "64e8d31df6fc6d9d05d581b390f35e958002f1fb07fe393d1c2c3cad07adec35",
+  "companion_candidate_bound": true,
+  "companion_resources_resolve": true,
+  "domain_evidence_resolves": true,
+  "ephemeral_state_removed": true,
+  "final_validation": "passed",
+  "plan_sha256": "88bb3433d1726af9706a3f19d4364b640cd3c5c5e5d12f0288ffe7dea8803a77",
+  "request_bytes_exact_as_goal": true,
+  "source_digests_current": true,
+  "terminal_status": "complete",
+  "terminal_stdout_retained": true,
+  "trivial_reviews": 2,
+  "workspace_graph_effects": "not executed; workspace empty"
+}

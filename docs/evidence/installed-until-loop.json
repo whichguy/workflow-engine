@@ -1,0 +1,95 @@
+{
+  "candidate": {
+    "locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/installed-until-loop-candidate.json",
+    "mutated_after_creation": false,
+    "sha256": "7fca2e0b0e7efb1b0185cd913f4c4fa7ef5a6e828920304382262f5d3ce68ae8"
+  },
+  "installed_package": {
+    "root": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/until-loop/0.4.0-rc.2",
+    "selected_adapter": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/until-loop/0.4.0-rc.2/skills/until-loop/scripts/until_loop_ephemeral.py",
+    "selected_card": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/until-loop/0.4.0-rc.2/skills/until-loop/SKILL.md",
+    "version": "0.4.0-rc.2"
+  },
+  "kind": "actual-installed-until-loop-ephemeral-lifecycle",
+  "lifecycle": {
+    "cold_next": {
+      "action_number": 1,
+      "same_state_file": true,
+      "status": "active",
+      "trivial_streak": 0
+    },
+    "reviews": [
+      {
+        "action_number": 1,
+        "candidate_sha256": "7fca2e0b0e7efb1b0185cd913f4c4fa7ef5a6e828920304382262f5d3ce68ae8",
+        "classification": "trivial",
+        "continuation_assessment": "allowed",
+        "exit_assessment": "unsatisfied",
+        "focus": "JSON shape and declared lifecycle-only scope",
+        "result_action_number": 2,
+        "result_status": "active",
+        "result_trivial_streak": 1
+      },
+      {
+        "action_number": 2,
+        "candidate_sha256": "7fca2e0b0e7efb1b0185cd913f4c4fa7ef5a6e828920304382262f5d3ce68ae8",
+        "classification": "trivial",
+        "continuation_assessment": "allowed",
+        "exit_assessment": "satisfied",
+        "focus": "byte stability, canonical serialization, and lifecycle-only scope",
+        "result_status": "complete",
+        "result_trivial_streak": 2
+      }
+    ],
+    "start": {
+      "action_number": 1,
+      "required_trivial_reviews": 2,
+      "state_file": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/innerloop-rpxm4dru.json",
+      "status": "active"
+    },
+    "terminal": {
+      "has_done_argv": false,
+      "has_next_argv": false,
+      "state_file_removed": true,
+      "status": "complete"
+    }
+  },
+  "scope": "Disposable lifecycle exercise only; it does not establish semantic Backchain convergence or marketplace publication.",
+  "selected_binding_comparison": {
+    "claude_manifest": {
+      "installed_path": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/until-loop/0.4.0-rc.2/.claude-plugin/plugin.json",
+      "installed_sha256": "6aa3cb8f2d09fed4eefe4f92a8b08d17534ca75e468cef7edfe3d28da37fc67a",
+      "match": true,
+      "selected_path": "/Users/dadleet/src/until-loop/plugins/until-loop/.claude-plugin/plugin.json",
+      "selected_sha256": "6aa3cb8f2d09fed4eefe4f92a8b08d17534ca75e468cef7edfe3d28da37fc67a"
+    },
+    "codex_manifest": {
+      "installed_path": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/until-loop/0.4.0-rc.2/.codex-plugin/plugin.json",
+      "installed_sha256": "9fd481f104b579d81dc9147039f8f134beff13c9a014cce2b4e9fd78a5e14b12",
+      "match": true,
+      "selected_path": "/Users/dadleet/src/until-loop/plugins/until-loop/.codex-plugin/plugin.json",
+      "selected_sha256": "9fd481f104b579d81dc9147039f8f134beff13c9a014cce2b4e9fd78a5e14b12"
+    },
+    "ephemeral_adapter": {
+      "installed_path": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/until-loop/0.4.0-rc.2/skills/until-loop/scripts/until_loop_ephemeral.py",
+      "installed_sha256": "6a4131f8a70b56a361556fbc61e924f060ebf1ba5d5f1387a6d6d735e89b4212",
+      "match": true,
+      "selected_path": "/Users/dadleet/src/until-loop/plugins/until-loop/skills/until-loop/scripts/until_loop_ephemeral.py",
+      "selected_sha256": "6a4131f8a70b56a361556fbc61e924f060ebf1ba5d5f1387a6d6d735e89b4212"
+    },
+    "ephemeral_reference": {
+      "installed_path": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/until-loop/0.4.0-rc.2/skills/until-loop/references/runtime-ephemeral.md",
+      "installed_sha256": "8d59ea1b8dcbabc6cffbe333dbe60ec638aa9f2ecab6a9cd4c1891ded8f058bb",
+      "match": true,
+      "selected_path": "/Users/dadleet/src/until-loop/plugins/until-loop/skills/until-loop/references/runtime-ephemeral.md",
+      "selected_sha256": "8d59ea1b8dcbabc6cffbe333dbe60ec638aa9f2ecab6a9cd4c1891ded8f058bb"
+    },
+    "skill_card": {
+      "installed_path": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/until-loop/0.4.0-rc.2/skills/until-loop/SKILL.md",
+      "installed_sha256": "609959649f69f3ee5408bedbd6331806799495a8f59418e8d097c3d9f3c08028",
+      "match": true,
+      "selected_path": "/Users/dadleet/src/until-loop/plugins/until-loop/skills/until-loop/SKILL.md",
+      "selected_sha256": "609959649f69f3ee5408bedbd6331806799495a8f59418e8d097c3d9f3c08028"
+    }
+  }
+}

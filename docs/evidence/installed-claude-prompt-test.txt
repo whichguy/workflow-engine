@@ -1,0 +1,7 @@
+test_braid_prompt_packages_real_backchain_graph_and_executes_two_joins (test_prompt_examples.PromptExampleTests.test_braid_prompt_packages_real_backchain_graph_and_executes_two_joins)
+An authored prompt imports both fan-out/fan-in dependency boundaries. ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 1.897s
+
+OK

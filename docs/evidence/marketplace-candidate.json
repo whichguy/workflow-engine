@@ -1,0 +1,76 @@
+{
+  "status": "qualified release candidate; public catalog promotion recorded separately",
+  "date": "2026-09-18",
+  "workflow_source_commit": "219e290b731a9bf48b807f7fcb239eb298bb5758",
+  "workflow_version": "0.2.0",
+  "catalog_source": "isolated candidate skill-craft-market checkout based on 1392a4de547d07d9624e87b248d94cdc951c210a",
+  "dependencies": {
+    "ask-agent": {
+      "version": "0.3.0",
+      "tested_commit": "05c33295bc9f9623f3a8844c4d8bc68346f59f1e",
+      "updated_commit": "6a120ed28eda5a1c5df0ac557dcfe94b4996ad46",
+      "updated_card_sha256": "cd3d4fc04cceef1c1364be99432ba2a66cdbf55a91583cc484d8162844793699",
+      "updated_card_fresh_codex_install": true,
+      "updated_payload_check": {
+        "failures": 0,
+        "advisories": 0
+      }
+    },
+    "backchain": {
+      "version": "0.3.4",
+      "commit": "ea2d040f377c269af3412332f9793c2610a61a1d",
+      "private": true
+    },
+    "until-loop": {
+      "version": "0.4.0-rc.2",
+      "commit": "d10d5f6a49c12dec8dfe436e26271d6e449a6366"
+    }
+  },
+  "local_suite": {
+    "tests": 102,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "seconds": 76.139
+  },
+  "workflow_ci": {
+    "url": "https://github.com/whichguy/workflow-engine/actions/runs/35382514119",
+    "jobs": 4,
+    "platforms": [
+      "ubuntu-latest",
+      "macos-latest"
+    ],
+    "python": [
+      "3.10",
+      "3.13"
+    ],
+    "per_job": {
+      "selected": 102,
+      "passed": 89,
+      "skipped_private_backchain": 13
+    }
+  },
+  "anonymous_public_source": {
+    "http_status": 200,
+    "resource": "https://raw.githubusercontent.com/whichguy/workflow-engine/219e290b731a9bf48b807f7fcb239eb298bb5758/plugins/workflow/.codex-plugin/plugin.json"
+  },
+  "full_catalog_payload": {
+    "failures": 0,
+    "advisories": 0,
+    "transport": "authenticated gh api using existing login",
+    "earlier_unauthenticated_attempt": "private Backchain 404 and public API rate limit; no package defect, rerun authenticated",
+    "packages_checked": 23,
+    "scope": "All 23 pre-drift entries; ask-agent 05c3329 and workflow 219e290. The replacement ask-agent 6a120ed received a focused payload check."
+  },
+  "evidence": {
+    "installed-prompt-tests.txt": "cf0c420c92390cc8c41bd492d2a59b69e5286fa913146a36d91a228a7573f5d9",
+    "installed-native-confetti.json": "f30bb87262072f136dfb3dfaba7e8959159fa18ae2bbb48a473d4ebf9cade3b8",
+    "marketplace-full-payload.txt": "18538fec4dd7b770bf70e01707800231d25b5dc11f5c13e0fef7bd4e7e03b5c2",
+    "installed-codex-braid.json": "8860393ac9539403a6a18e513492442f075b50c6d5481c2a0cd01fcff37dfbfe",
+    "installed-until-loop.json": "d237d820406083d07149851552ec6088a48710ac11da527a6a2a640ca930d626",
+    "installed-claude-braid.json": "512914afb04d035a9131dfa2b7af17e12e1f0ea5eec33b569ddd3cc6d642a892",
+    "ask-agent-current-payload.txt": "51c71338dd5ddff3c60c63e7dd06d0aa30196e64a777fdadabf2a015e3b47d31",
+    "installed-native-prompt/manifest.json": "f97eeba3db340303056a4bb278be8ceddc1f3e6e56639bb185b3f4fd7d3e0214",
+    "installed-native-prompt/result.json": "9a1651e4507b7c2aed83fb15b7f085c59a7e18e20be108d36eeebe267679644e"
+  }
+}

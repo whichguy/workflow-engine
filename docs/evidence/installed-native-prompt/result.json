@@ -1,0 +1,74 @@
+{
+  "task": "Installed Planner",
+  "native_handle": "/root/installed_planner",
+  "native_type": "worker",
+  "role_substitution": null,
+  "status": "SUCCEEDED",
+  "collection": "Actual completion notification collected; parent accepted plan and executed graph; no outstanding worker or collection rejection",
+  "planning_model_execution": true,
+  "graph_model_execution": false,
+  "workflow_source": "219e290b731a9bf48b807f7fcb239eb298bb5758",
+  "backchain_source": "ea2d040f377c269af3412332f9793c2610a61a1d",
+  "until_loop_source": "d10d5f6a49c12dec8dfe436e26271d6e449a6366",
+  "request": "Create seed.txt with the two lines alpha and beta. Independently create words.txt with those words in uppercase and count.txt with the number of words. Combine both into report.txt. Then independently create summary.txt and audit.txt from the report. Verify both final files. Use only local file operations and explicit Python commands; preserve every required branch.\n",
+  "plan_sha256": "88bb3433d1726af9706a3f19d4364b640cd3c5c5e5d12f0288ffe7dea8803a77",
+  "trace": [
+    {
+      "accepted": "S1",
+      "status_after": "ready",
+      "next_step": "S2"
+    },
+    {
+      "accepted": "S2",
+      "status_after": "ready",
+      "next_step": "S3"
+    },
+    {
+      "accepted": "S3",
+      "status_after": "ready",
+      "next_step": "S4"
+    },
+    {
+      "accepted": "S4",
+      "status_after": "ready",
+      "next_step": "S5"
+    },
+    {
+      "accepted": "S5",
+      "status_after": "ready",
+      "next_step": "S6"
+    },
+    {
+      "accepted": "S6",
+      "status_after": "ready",
+      "next_step": "S7"
+    },
+    {
+      "accepted": "S7",
+      "status_after": "ready",
+      "next_step": "S8"
+    },
+    {
+      "accepted": "S8",
+      "status_after": "complete",
+      "next_step": null
+    }
+  ],
+  "terminal_status": "complete",
+  "cold_recovery_unchanged": true,
+  "outputs": {
+    "audit.txt": "187575737f0e7c81bbc1f7b2ff345689792e34cf250efad8272e1f482e5ee9f6",
+    "summary.verification.json": "1f2ebb0bc73fc71a662a8ee2fa55410335bad119ff73f9736b0dbe5180e21b7c",
+    "summary.txt": "91a947faa664058ce556b88346de0f0c4a6e830f35dd76e765a262cc9337bb51",
+    "audit.verification.json": "447a3e333fed2f0f59ae8a00cdc6427479abace774433c98a29f6db074e5a56f",
+    "report.txt": "787b0430bb31bb2dc14ac9409b2a725a33383033f18b8580fa8d53650b052d47",
+    "words.txt": "83df7e59ceaa1be993682062cd27bf49781e1308635f50e096567e573b94a12a",
+    "seed.txt": "e49c81e2d2f84e259d40e2fb8192f3bcd198b355184845d76d8f58807d0d78ee",
+    "count.txt": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+  },
+  "boundaries": [
+    "single Codex native planning execution",
+    "serial command graph execution",
+    "selected Until terminal acceptance is not independent proof of review quality"
+  ]
+}

@@ -1,0 +1,1 @@
+Create seed.txt with the two lines alpha and beta. Independently create words.txt with those words in uppercase and count.txt with the number of words. Combine both into report.txt. Then independently create summary.txt and audit.txt from the report. Verify both final files. Use only local file operations and explicit Python commands; preserve every required branch.

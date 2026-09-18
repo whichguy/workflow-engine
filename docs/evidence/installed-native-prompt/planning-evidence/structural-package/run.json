@@ -1,0 +1,29 @@
+{
+  "timestamp": "20260918T191151Z",
+  "model": "sonnet",
+  "elab_backend": "router",
+  "out_dir": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/planning-evidence/structural-package",
+  "stages": {
+    "package_validate": {
+      "ok": true,
+      "only_inv7": false,
+      "inv6_ok": true,
+      "status": "complete",
+      "value_verdict": null,
+      "provided_value": null
+    }
+  },
+  "source_context": null,
+  "exit_code": 0,
+  "mode": "package-only",
+  "source": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/run/plans/29b0bed0a7754f26815befb8dd498c00.plan.json",
+  "artifacts": {
+    "packaged": "packaged.json",
+    "validation": "validation.json",
+    "handoff": "handoff.json",
+    "full_report": "full-report.txt",
+    "compact_report": "compact-report.md",
+    "relationship_events": "relationship-events.ndjson"
+  },
+  "report_mode": "compact"
+}

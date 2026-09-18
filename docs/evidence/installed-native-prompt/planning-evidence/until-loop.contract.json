@@ -1,0 +1,79 @@
+{
+  "workspace": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer",
+  "work": "Backchain standalone Until Loop binding: native-prompt-consumer-29b0bed0a7754f26815befb8dd498c00. Perform one complete, fresh whole-plan dependency-review/fix/check cycle for the frozen candidate plan and execution bindings. Read the exact original request, current candidate, dependency context, lens screen, selected Backchain convergence procedure, technical-lens index, relevant cards/interactions, selected Until Loop card and ephemeral adapter reference, and current structural package evidence. Trace backward from each requested outcome and terminal verification sink; walk forward over every supplier, consumer, fork, join, and terminal leaf; screen all 42 lenses with actual applicability; check candidate/source identity and execution-binding coverage; then make only an authorized in-scope repair if an actual material planning defect exists. Re-run candidate checks after a repair. Do not execute graph effects, invoke accept-plan, change run/state.md, write under workspace except the two frozen plan files if an authorized repair is necessary, make Git changes, merge, push, or broaden scope.",
+  "exit_condition": "Two consecutive distinct completed trivial or no-change dependency reviews find no material planning gap, and candidate-specific domain evidence establishes that the exact request bytes remain plan.goal, every requested branch and join is represented by direct supplier edges, both independent final verification leaves are present, every step has an explicit Python command binding with declared outputs and checks, and the installed Backchain structural package receipt for the same candidate is valid and complete. The selected Until Loop must return its exact terminal complete packet, which must be retained outside its ephemeral state file.",
+  "repeat_condition": "Repeat while a useful authorized in-scope planning repair or a required distinct full review remains. Stop incomplete if a required selected resource becomes unavailable, a necessary repair would broaden the frozen scope, or candidate identity cannot be established.",
+  "required_trivial_reviews": 2,
+  "context": {
+    "request": "Create seed.txt with the two lines alpha and beta. Independently create words.txt with those words in uppercase and count.txt with the number of words. Combine both into report.txt. Then independently create summary.txt and audit.txt from the report. Verify both final files. Use only local file operations and explicit Python commands; preserve every required branch.\n",
+    "scope": "Compatibility-native Backchain planning only. Frozen candidate is run/plans/29b0bed0a7754f26815befb8dd498c00.plan.json with SHA-256 88bb3433d1726af9706a3f19d4364b640cd3c5c5e5d12f0288ffe7dea8803a77 and its companion bindings SHA-256 64e8d31df6fc6d9d05d581b390f35e958002f1fb07fe393d1c2c3cad07adec35. Allowed artifacts are those two plan files and planning-evidence. No graph effects, plan acceptance, Weave state edits, repository changes, merge, push, or publication.",
+    "authority": "The parent owns inspection, plan acceptance, and later execution. This child may repair only a verified in-scope planning defect, preserving exact request bytes as plan.goal and all existing seed step IDs and direct edges. No source-aware caller packet is supplied. No user-defined pass ceiling exists; the selected Backchain binding requires the selected Until Loop gate of two consecutive trivial reviews.",
+    "environment": "Use Python 3 and the selected installed paths below. The consumer workspace exists and is empty at planning time. Required deterministic check: bash /Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/backchain/0.3.4/harness/run-prompt.sh --package-only /Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/run/plans/29b0bed0a7754f26815befb8dd498c00.plan.json --quiet --out-dir /Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/planning-evidence/structural-package. Existing receipt reported validateStructure.ok=true and completionStatus=complete without executing the graph.",
+    "resources": [
+      {
+        "purpose": "frozen planning packet and parent return route",
+        "locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/planning-packet.json"
+      },
+      {
+        "purpose": "exact original request bytes",
+        "locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/request.txt"
+      },
+      {
+        "purpose": "frozen candidate plan",
+        "locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/run/plans/29b0bed0a7754f26815befb8dd498c00.plan.json"
+      },
+      {
+        "purpose": "frozen execution bindings",
+        "locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/run/plans/29b0bed0a7754f26815befb8dd498c00.bindings.json"
+      },
+      {
+        "purpose": "selected Backchain card",
+        "locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/backchain/0.3.4/skills/backchain/SKILL.md"
+      },
+      {
+        "purpose": "selected Backchain convergence binding",
+        "locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/backchain/0.3.4/skills/backchain/references/convergence.md"
+      },
+      {
+        "purpose": "selected Backchain technical lens index",
+        "locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/backchain/0.3.4/skills/backchain/references/technical-lenses.md"
+      },
+      {
+        "purpose": "selected Backchain lens cards",
+        "locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/backchain/0.3.4/skills/backchain/references/technical-lens-cards.md"
+      },
+      {
+        "purpose": "selected Backchain technical interactions",
+        "locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/backchain/0.3.4/skills/backchain/references/technical-interactions.md"
+      },
+      {
+        "purpose": "selected Until Loop card",
+        "locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/until-loop/0.4.0-rc.2/skills/until-loop/SKILL.md"
+      },
+      {
+        "purpose": "selected Until Loop ephemeral adapter reference",
+        "locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/until-loop/0.4.0-rc.2/skills/until-loop/references/runtime-ephemeral.md"
+      },
+      {
+        "purpose": "selected Until Loop adapter",
+        "locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/until-loop/0.4.0-rc.2/skills/until-loop/scripts/until_loop_ephemeral.py"
+      },
+      {
+        "purpose": "native dependency questions",
+        "locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/planning-evidence/dependency-context.json"
+      },
+      {
+        "purpose": "42-lens screen",
+        "locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/planning-evidence/lens-screen.md"
+      },
+      {
+        "purpose": "candidate-specific structural validation receipt",
+        "locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/planning-evidence/structural-package/validation.json"
+      },
+      {
+        "purpose": "terminal receipt output destination",
+        "locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/planning-evidence/packets/terminal.json"
+      }
+    ]
+  }
+}

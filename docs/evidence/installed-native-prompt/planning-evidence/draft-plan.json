@@ -1,0 +1,68 @@
+{
+  "goal": "Create seed.txt with the two lines alpha and beta. Independently create words.txt with those words in uppercase and count.txt with the number of words. Combine both into report.txt. Then independently create summary.txt and audit.txt from the report. Verify both final files. Use only local file operations and explicit Python commands; preserve every required branch.\n",
+  "initial_state": [],
+  "goal_needs": [
+    "summary.txt has been verified against report.txt",
+    "audit.txt has been verified against report.txt"
+  ],
+  "steps": [
+    {
+      "id": "S1",
+      "statement": "seed.txt contains exactly the two requested source lines.",
+      "produces": ["seed.txt contains exactly the lines alpha and beta"],
+      "inputs": [],
+      "origin": "seed"
+    },
+    {
+      "id": "S2",
+      "statement": "words.txt contains the uppercase form of the two seed words.",
+      "produces": ["words.txt contains ALPHA and BETA on separate lines"],
+      "inputs": [],
+      "origin": "seed"
+    },
+    {
+      "id": "S3",
+      "statement": "count.txt records the number of seed words.",
+      "produces": ["count.txt records the word count 2"],
+      "inputs": [],
+      "origin": "seed"
+    },
+    {
+      "id": "S4",
+      "statement": "report.txt combines the uppercase words and their count.",
+      "produces": ["report.txt combines the uppercase words and count"],
+      "inputs": [],
+      "origin": "seed"
+    },
+    {
+      "id": "S5",
+      "statement": "summary.txt is derived from report.txt.",
+      "produces": ["summary.txt is derived from report.txt"],
+      "inputs": [],
+      "origin": "seed"
+    },
+    {
+      "id": "S6",
+      "statement": "audit.txt is derived from report.txt.",
+      "produces": ["audit.txt is derived from report.txt"],
+      "inputs": [],
+      "origin": "seed"
+    },
+    {
+      "id": "S7",
+      "statement": "summary.txt has been verified against report.txt.",
+      "produces": ["summary.txt has been verified against report.txt"],
+      "inputs": [],
+      "origin": "seed"
+    },
+    {
+      "id": "S8",
+      "statement": "audit.txt has been verified against report.txt.",
+      "produces": ["audit.txt has been verified against report.txt"],
+      "inputs": [],
+      "origin": "seed"
+    }
+  ],
+  "parallel_groups": [],
+  "unresolved": []
+}

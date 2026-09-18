@@ -1,0 +1,18 @@
+{
+  "all_bindings_explicit_python": true,
+  "bindings_complete": true,
+  "bindings_sha256": "64e8d31df6fc6d9d05d581b390f35e958002f1fb07fe393d1c2c3cad07adec35",
+  "check": "candidate domain graph and bindings",
+  "declared_outputs_unique": true,
+  "expected_edges_exact": true,
+  "goal_bytes_exact": true,
+  "graph_effects_executed": false,
+  "initial_state_empty": true,
+  "plan_sha256": "88bb3433d1726af9706a3f19d4364b640cd3c5c5e5d12f0288ffe7dea8803a77",
+  "request_sha256": "223adb1e9f815a90d0a1239e173e31197fb72ecfa38f4beb364c6be289c40647",
+  "terminal_leaves": [
+    "S7",
+    "S8"
+  ],
+  "unresolved_empty": true
+}

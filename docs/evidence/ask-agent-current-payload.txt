@@ -1,0 +1,2 @@
+check ask-agent path='plugins/ask-agent' ref=None sha='6a120ed28eda5a1c5df0ac557dcfe94b4996ad46' catalog_version='0.3.0'
+OK   ask-agent version=0.3.0 body=plugins/ask-agent/skills/ask-agent/SKILL.md payload=checked

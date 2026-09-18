@@ -1,0 +1,26 @@
+{
+  "source": "native",
+  "questions": [
+    {
+      "text": "Must each final verification prove its file was derived from report.txt, rather than only inspect the final file in isolation?",
+      "affected_steps": ["S7", "S8"],
+      "possible_graph_change": "may require direct report.txt supplier edges to both verification sinks",
+      "source_needed": "context",
+      "priority": "high"
+    },
+    {
+      "text": "Does preserving every required branch require two terminal verification leaves instead of a synthetic final combine step?",
+      "affected_steps": ["S7", "S8"],
+      "possible_graph_change": "may retain independent terminal sinks and rely on the workflow driver's all-required-leaves completion rule",
+      "source_needed": "context",
+      "priority": "high"
+    }
+  ],
+  "resolved_facts": [],
+  "evidence": [],
+  "assumptions": [],
+  "meta": {
+    "considered": 5,
+    "kept": 2
+  }
+}

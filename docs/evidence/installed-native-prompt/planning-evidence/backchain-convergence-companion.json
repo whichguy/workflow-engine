@@ -1,0 +1,58 @@
+{
+  "binding_id": "native-prompt-consumer-29b0bed0a7754f26815befb8dd498c00",
+  "owner": "selected Until Loop binding",
+  "candidate": {
+    "input_sha256": "88bb3433d1726af9706a3f19d4364b640cd3c5c5e5d12f0288ffe7dea8803a77",
+    "output_sha256": "88bb3433d1726af9706a3f19d4364b640cd3c5c5e5d12f0288ffe7dea8803a77"
+  },
+  "resources": [
+    {
+      "purpose": "exact original request",
+      "resolved_locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/request.txt"
+    },
+    {
+      "purpose": "candidate plan",
+      "resolved_locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/run/plans/29b0bed0a7754f26815befb8dd498c00.plan.json"
+    },
+    {
+      "purpose": "candidate execution bindings",
+      "resolved_locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/run/plans/29b0bed0a7754f26815befb8dd498c00.bindings.json"
+    },
+    {
+      "purpose": "selected Backchain card",
+      "resolved_locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/backchain/0.3.4/skills/backchain/SKILL.md"
+    },
+    {
+      "purpose": "selected Backchain convergence binding",
+      "resolved_locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/backchain/0.3.4/skills/backchain/references/convergence.md"
+    },
+    {
+      "purpose": "selected Until Loop card",
+      "resolved_locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/until-loop/0.4.0-rc.2/skills/until-loop/SKILL.md"
+    },
+    {
+      "purpose": "selected Until Loop ephemeral adapter",
+      "resolved_locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/until-loop/0.4.0-rc.2/skills/until-loop/scripts/until_loop_ephemeral.py"
+    },
+    {
+      "purpose": "installed Weave planning reference",
+      "resolved_locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/profiles/codex/plugins/cache/skill-craft-market/workflow/0.2.0/skills/workflow/references/planning.md"
+    }
+  ],
+  "terminal_receipt": {
+    "resolved_locator": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/planning-evidence/packets/terminal.json",
+    "opaque": true
+  },
+  "domain_evidence": [
+    "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/planning-evidence/reviews/cycle-1.md",
+    "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/planning-evidence/reviews/cycle-1.static-check.json",
+    "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/planning-evidence/reviews/cycle-2.md",
+    "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/planning-evidence/reviews/cycle-2.static-check.json",
+    "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/planning-evidence/lens-screen.md",
+    "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/planning-evidence/structural-package/validation.json",
+    "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/native-prompt-consumer/planning-evidence/source-identities.sha256"
+  ],
+  "planning_gaps": [],
+  "execution_blockers": [],
+  "next_action": "Parent should inspect this companion and the raw terminal receipt, invoke the exact Weave accept-plan command from planning-packet.json, then execute the installed workflow CLI. Planning convergence does not establish graph execution."
+}

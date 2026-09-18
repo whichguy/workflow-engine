@@ -2,16 +2,17 @@
 
 This is a source and release-readiness audit for Weave. It separates the selected
 local source, published source, installed-skill execution, and future adapter work.
-It does not update historical provenance or assert a marketplace release.
+It does not update historical provenance. Publication and consumer evidence are
+tracked separately in [DISTRIBUTION.md](DISTRIBUTION.md).
 
 ## Release identities
 
 | Item | Selected/local evidence | Published evidence | Disposition |
 | --- | --- | --- | --- |
-| Weave release | Working tree at `66f06473d1e779b44f6a393a23ca37f3fc4761b8` with local changes | **Release commit: PENDING**; **release tag: PENDING** | Do not call the working tree a published artifact. |
+| Weave release | Prototype began at `66f06473d1e779b44f6a393a23ca37f3fc4761b8` | Public qualified code candidate `219e290b731a9bf48b807f7fcb239eb298bb5758`, version 0.2.0 | Release tags and marketplace pins are separate from a working-tree test. |
 | skill-craft selected worktree | `004447fd395d1820332cf454c9f966c4c85f63fe`, with local ShipLoop changes | `origin/main` `5a073503bcfe35e620461498b3fa438afe94d0bc` | Published ShipLoop is newer than the selected worktree. |
 | extracted store | `docs/PROVENANCE.json` pins source SHA-256 `1f099a8f4e900ad3fe69f26c879ef30b89237876f7432b5848a557f204c65f1c` | Published `shiploop_store.py` is byte-identical to that source snapshot | Already inherited, with only `ShipLoop` → `Workflow` names/fences/schema changed. |
-| ask-agent | Local `skills/ask-agent/SKILL.md` is v0.3.0, SHA-256 `4ac0eb3f701f07d78d4bb2f96bd7a0fa7131cd48910582df3a6794befa6345ce` | Canonical dependency publication is still being prepared | Treat ask-agent as an unavailable external dependency until its own published pin/installation is verified. |
+| ask-agent | Initial v0.3.0 card SHA-256 `4ac0eb3f701f07d78d4bb2f96bd7a0fa7131cd48910582df3a6794befa6345ce`; re-audited update `cd3d4fc04cceef1c1364be99432ba2a66cdbf55a91583cc484d8162844793699` | Updated package published on source release branch `6a120ed28eda5a1c5df0ac557dcfe94b4996ad46` | Independently packaged dependency; see distribution record for catalog promotion and installation. |
 
 `docs/PROVENANCE.json` is historical extraction evidence. It deliberately remains
 unchanged: it records the selected dirty-source snapshot, not an assertion about
@@ -95,11 +96,19 @@ callback/evidence. A file appearing cannot prove worker completion; a saved hand
 does not prove cross-session recovery. Do not duplicate its skill body or create a
 hidden subprocess launcher in Weave.
 
-The local v0.3.0 ask-agent source is not yet a verified public dependency. Its
-canonical dependency publication is being prepared separately. Marketplace
-discovery, installation, and actual host execution are distinct claims; until a
-published pin and installed invocation are verified, document this as a required
-external capability rather than a delivered runtime path.
+The initially untracked v0.3.0 source needed its own publication. During this
+release the canonical card changed again, adding broad general-purpose worker
+selection, inherited capabilities, parent pending-job ownership and waiting-status
+guidance. The update was re-audited and included in the separate source release;
+the Git integration reference remained byte-identical. General defaults do not
+override Weave's explicit per-action file ownership and no-nested-delegation
+constraint. Pending-job notes are coordination, never a second scheduler or
+completion signal.
+
+The first installed native smoke used the original card and is identified by its
+source commit. The updated card receives a separate fresh install/digest check;
+do not quietly relabel historical execution evidence as a test of a newer prompt.
+Marketplace discovery, installation and host execution remain distinct claims.
 
 ## Release disposition
 
@@ -110,6 +119,31 @@ external capability rather than a delivered runtime path.
 3. **Future adapter design:** generic selected-child receipt persistence and
    optional accepted-boundary host context controller. Both must fail closed on
    missing state/receipt or uncertain prior effects, without replay.
-4. **Before a release claim:** fill the pending Weave release SHA/tag and separately
-   verify the published ask-agent dependency plus the installed consumer path.
+4. **Release qualification:** record exact Weave and dependency pins, verify the
+   independently published ask-agent package and exercise installed consumer paths.
 
+## Published ShipLoop follow-up — 2026-09-18
+
+After this audit began, published `origin/main` advanced from
+`5a073503bcfe35e620461498b3fa438afe94d0bc` to
+`3d45d186e8caf605660e1f49efded1fb3d31dffa` through UI-allocation
+(`be3ed4d`) and probe-experiment (`bf6fe17`) changes. The targeted comparison
+changed only ShipLoop's behavioral-requirements reference and v3 prompt catalog;
+the store, selected-child bridge, workspace helper, context-host controller, and
+navigator runtime were unchanged. ShipLoop version is now `0.15.1`.
+
+The new behavior routes a conditional UI-planning-ownership reference into
+discovery, plan, prepare, and step-plan. It assigns shared UI premises and missing
+capability readiness to global/preparation planning, confines an item to its own
+interaction delta, and preserves a blocked/correction route for an externally
+owned prerequisite. The existing Improve handoff reviews this material without a
+second graph node, counter, or child campaign. [Published UI allocation
+reference](https://github.com/whichguy/skill-craft/blob/3d45d186e8caf605660e1f49efded1fb3d31dffa/skills/shiploop/references/behavioral-requirements.md#L231-L273)
+and [published v3 packet routing](https://github.com/whichguy/skill-craft/blob/3d45d186e8caf605660e1f49efded1fb3d31dffa/skills/shiploop/scripts/shiploop_navigator_v3_prompts.py#L71-L115)
+establish that this is ShipLoop SDLC/prompt policy.
+
+**Decision:** retain this externally. Weave's generic graph already permits an
+authored dependency and blocked result; it must not add UI phases, UI-premise
+schemas, or Improve behavior. A future ShipLoop profile may carry this reference
+and its result contract. No generic storage/recovery test was rerun because none
+of those runtime boundaries changed.

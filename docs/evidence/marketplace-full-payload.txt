@@ -1,0 +1,47 @@
+check architect path='plugins/architect' ref='main' sha='621534abd06ed3618e94b54c565224075bdd0527' catalog_version='0.1.1'
+OK   architect version=0.1.1 body=plugins/architect/skills/architect/SKILL.md payload=checked
+check backchain path='' ref='main' sha='ea2d040f377c269af3412332f9793c2610a61a1d' catalog_version='0.3.4'
+OK   backchain version=0.3.4 body=skills/backchain/SKILL.md payload=checked
+check c-plan path='plugins/c-plan' ref='main' sha='621534abd06ed3618e94b54c565224075bdd0527' catalog_version='0.1.1'
+OK   c-plan version=0.1.1 body=plugins/c-plan/skills/c-plan/SKILL.md payload=checked
+check compare-prompts path='plugins/compare-prompts' ref='main' sha='621534abd06ed3618e94b54c565224075bdd0527' catalog_version='0.1.1'
+OK   compare-prompts version=0.1.1 body=plugins/compare-prompts/skills/compare-prompts/SKILL.md payload=checked
+check derive-questions path='plugins/derive-questions' ref='main' sha='621534abd06ed3618e94b54c565224075bdd0527' catalog_version='0.1.1'
+OK   derive-questions version=0.1.1 body=plugins/derive-questions/skills/derive-questions/SKILL.md payload=checked
+check devloop path='plugins/devloop' ref='main' sha='621534abd06ed3618e94b54c565224075bdd0527' catalog_version='0.6.0'
+OK   devloop version=0.6.0 body=plugins/devloop/skills/devloop/SKILL.md payload=checked
+check improve-system-prompt path='plugins/improve-system-prompt' ref='main' sha='621534abd06ed3618e94b54c565224075bdd0527' catalog_version='0.1.1'
+OK   improve-system-prompt version=0.1.1 body=plugins/improve-system-prompt/skills/improve-system-prompt/SKILL.md payload=checked
+check lennox-s40 path='' ref='v0.2.1' sha='25aedea84f49704021c6d7751003455476ea3bfa' catalog_version='0.2.1'
+OK   lennox-s40 version=0.2.1 body=skills/lennox-s40/SKILL.md payload=checked
+check plan-test path='plugins/plan-test' ref='main' sha='621534abd06ed3618e94b54c565224075bdd0527' catalog_version='0.1.1'
+OK   plan-test version=0.1.1 body=plugins/plan-test/skills/plan-test/SKILL.md payload=checked
+check prompt-align path='plugins/prompt-align' ref='main' sha='621534abd06ed3618e94b54c565224075bdd0527' catalog_version='0.1.1'
+OK   prompt-align version=0.1.1 body=plugins/prompt-align/skills/prompt-align/SKILL.md payload=checked
+check prompt-audit path='plugins/prompt-audit' ref='main' sha='621534abd06ed3618e94b54c565224075bdd0527' catalog_version='0.1.1'
+OK   prompt-audit version=0.1.1 body=plugins/prompt-audit/skills/prompt-audit/SKILL.md payload=checked
+check prompt-migrate path='plugins/prompt-migrate' ref='main' sha='621534abd06ed3618e94b54c565224075bdd0527' catalog_version='0.1.1'
+OK   prompt-migrate version=0.1.1 body=plugins/prompt-migrate/skills/prompt-migrate/SKILL.md payload=checked
+check prompt-refine path='plugins/prompt-refine' ref='main' sha='621534abd06ed3618e94b54c565224075bdd0527' catalog_version='0.1.1'
+OK   prompt-refine version=0.1.1 body=plugins/prompt-refine/skills/prompt-refine/SKILL.md payload=checked
+check question-bench path='plugins/question-bench' ref='main' sha='621534abd06ed3618e94b54c565224075bdd0527' catalog_version='0.1.1'
+OK   question-bench version=0.1.1 body=plugins/question-bench/skills/question-bench/SKILL.md payload=checked
+check review-coverage path='plugins/review-coverage' ref='main' sha='621534abd06ed3618e94b54c565224075bdd0527' catalog_version='0.2.6'
+OK   review-coverage version=0.2.6 body=plugins/review-coverage/skills/review-coverage/SKILL.md payload=checked
+check review-fix-bench path='plugins/review-fix-bench' ref='main' sha='621534abd06ed3618e94b54c565224075bdd0527' catalog_version='0.1.1'
+OK   review-fix-bench version=0.1.1 body=plugins/review-fix-bench/skills/review-fix-bench/SKILL.md payload=checked
+check skill-interop path='plugins/skill-interop' ref='main' sha='621534abd06ed3618e94b54c565224075bdd0527' catalog_version='0.2.1'
+OK   skill-interop version=0.2.1 body=plugins/skill-interop/skills/skill-interop/SKILL.md payload=checked
+check evidence-gates path='plugins/evidence-gates' ref='main' sha='621534abd06ed3618e94b54c565224075bdd0527' catalog_version='0.2.2'
+OK   evidence-gates version=0.2.2 body=plugins/evidence-gates/skills/evidence-gates/SKILL.md payload=checked
+check shiploop path='plugins/shiploop' ref='shiploop-v0.15.0' sha='2003cfd5fa33eb8d57a95ed977b09b7c5257c13d' catalog_version='0.15.0'
+OK   shiploop version=0.15.0 body=plugins/shiploop/skills/shiploop/SKILL.md payload=checked
+check improve path='plugins/improve' ref='improve-v0.2.0-rc.1' sha='2003cfd5fa33eb8d57a95ed977b09b7c5257c13d' catalog_version='0.2.0-rc.1'
+OK   improve version=0.2.0-rc.1 body=plugins/improve/skills/improve/SKILL.md payload=checked
+check until-loop path='plugins/until-loop' ref='main' sha='d10d5f6a49c12dec8dfe436e26271d6e449a6366' catalog_version='0.4.0-rc.2'
+OK   until-loop version=0.4.0-rc.2 body=plugins/until-loop/skills/until-loop/SKILL.md payload=checked
+check ask-agent path='plugins/ask-agent' ref=None sha='05c33295bc9f9623f3a8844c4d8bc68346f59f1e' catalog_version='0.3.0'
+OK   ask-agent version=0.3.0 body=plugins/ask-agent/skills/ask-agent/SKILL.md payload=checked
+check workflow path='plugins/workflow' ref=None sha='219e290b731a9bf48b807f7fcb239eb298bb5758' catalog_version='0.2.0'
+OK   workflow version=0.2.0 body=plugins/workflow/skills/workflow/SKILL.md payload=checked
+Authenticated full-payload result: failures=0 advisories=0

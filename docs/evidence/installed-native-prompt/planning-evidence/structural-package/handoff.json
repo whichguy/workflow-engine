@@ -1,0 +1,360 @@
+{
+  "goal": "Create seed.txt with the two lines alpha and beta. Independently create words.txt with those words in uppercase and count.txt with the number of words. Combine both into report.txt. Then independently create summary.txt and audit.txt from the report. Verify both final files. Use only local file operations and explicit Python commands; preserve every required branch.\n",
+  "waves": [
+    {
+      "depth": 0,
+      "step_ids": [
+        "S1"
+      ]
+    },
+    {
+      "depth": 1,
+      "step_ids": [
+        "S2",
+        "S3"
+      ]
+    },
+    {
+      "depth": 2,
+      "step_ids": [
+        "S4"
+      ]
+    },
+    {
+      "depth": 3,
+      "step_ids": [
+        "S5",
+        "S6"
+      ]
+    },
+    {
+      "depth": 4,
+      "step_ids": [
+        "S7",
+        "S8"
+      ]
+    }
+  ],
+  "critical_path": {
+    "step_ids": [
+      "S1",
+      "S2",
+      "S4",
+      "S5",
+      "S7"
+    ],
+    "length": 5,
+    "note": "Longest dependency chain by step count; ties broken deterministically. Not resource-critical path."
+  },
+  "edges": [
+    {
+      "from": "S1",
+      "to": "S2"
+    },
+    {
+      "from": "S1",
+      "to": "S3"
+    },
+    {
+      "from": "S2",
+      "to": "S4"
+    },
+    {
+      "from": "S3",
+      "to": "S4"
+    },
+    {
+      "from": "S4",
+      "to": "S5"
+    },
+    {
+      "from": "S4",
+      "to": "S6"
+    },
+    {
+      "from": "S4",
+      "to": "S7"
+    },
+    {
+      "from": "S4",
+      "to": "S8"
+    },
+    {
+      "from": "S5",
+      "to": "S7"
+    },
+    {
+      "from": "S6",
+      "to": "S8"
+    }
+  ],
+  "steps": [
+    {
+      "id": "S1",
+      "statement": "seed.txt contains exactly the two requested source lines.",
+      "produces": [
+        "seed.txt contains exactly the lines alpha and beta"
+      ],
+      "inputs": [],
+      "origin": "seed"
+    },
+    {
+      "id": "S2",
+      "statement": "words.txt contains the uppercase form of the two seed words.",
+      "produces": [
+        "words.txt contains ALPHA and BETA on separate lines"
+      ],
+      "inputs": [
+        {
+          "need": "seed.txt contains exactly the lines alpha and beta",
+          "from": "S1",
+          "artifact": "seed.txt"
+        }
+      ],
+      "origin": "seed"
+    },
+    {
+      "id": "S3",
+      "statement": "count.txt records the number of seed words.",
+      "produces": [
+        "count.txt records the word count 2"
+      ],
+      "inputs": [
+        {
+          "need": "seed.txt contains exactly the lines alpha and beta",
+          "from": "S1",
+          "artifact": "seed.txt"
+        }
+      ],
+      "origin": "seed"
+    },
+    {
+      "id": "S4",
+      "statement": "report.txt combines the uppercase words and their count.",
+      "produces": [
+        "report.txt combines the uppercase words and count"
+      ],
+      "inputs": [
+        {
+          "need": "words.txt contains ALPHA and BETA on separate lines",
+          "from": "S2",
+          "artifact": "words.txt"
+        },
+        {
+          "need": "count.txt records the word count 2",
+          "from": "S3",
+          "artifact": "count.txt"
+        }
+      ],
+      "origin": "seed"
+    },
+    {
+      "id": "S5",
+      "statement": "summary.txt is derived from report.txt.",
+      "produces": [
+        "summary.txt is derived from report.txt"
+      ],
+      "inputs": [
+        {
+          "need": "report.txt combines the uppercase words and count",
+          "from": "S4",
+          "artifact": "report.txt"
+        }
+      ],
+      "origin": "seed"
+    },
+    {
+      "id": "S6",
+      "statement": "audit.txt is derived from report.txt.",
+      "produces": [
+        "audit.txt is derived from report.txt"
+      ],
+      "inputs": [
+        {
+          "need": "report.txt combines the uppercase words and count",
+          "from": "S4",
+          "artifact": "report.txt"
+        }
+      ],
+      "origin": "seed"
+    },
+    {
+      "id": "S7",
+      "statement": "summary.txt has been verified against report.txt.",
+      "produces": [
+        "summary.txt has been verified against report.txt"
+      ],
+      "inputs": [
+        {
+          "need": "summary.txt is derived from report.txt",
+          "from": "S5",
+          "artifact": "summary.txt"
+        },
+        {
+          "need": "report.txt combines the uppercase words and count",
+          "from": "S4",
+          "artifact": "report.txt"
+        }
+      ],
+      "origin": "seed"
+    },
+    {
+      "id": "S8",
+      "statement": "audit.txt has been verified against report.txt.",
+      "produces": [
+        "audit.txt has been verified against report.txt"
+      ],
+      "inputs": [
+        {
+          "need": "audit.txt is derived from report.txt",
+          "from": "S6",
+          "artifact": "audit.txt"
+        },
+        {
+          "need": "report.txt combines the uppercase words and count",
+          "from": "S4",
+          "artifact": "report.txt"
+        }
+      ],
+      "origin": "seed"
+    }
+  ],
+  "initial_state": [],
+  "unresolved": [],
+  "roots": [
+    "S1"
+  ],
+  "sinks": [
+    "S7",
+    "S8"
+  ],
+  "forward_fidelity": {
+    "ok": true,
+    "forward_trace": [
+      {
+        "depth": 0,
+        "stepId": "S1",
+        "produces": [
+          "seed.txt contains exactly the lines alpha and beta"
+        ],
+        "relations": []
+      },
+      {
+        "depth": 1,
+        "stepId": "S2",
+        "produces": [
+          "words.txt contains ALPHA and BETA on separate lines"
+        ],
+        "relations": [
+          {
+            "from": "S1",
+            "need": "seed.txt contains exactly the lines alpha and beta",
+            "fidelity": "exact"
+          }
+        ]
+      },
+      {
+        "depth": 1,
+        "stepId": "S3",
+        "produces": [
+          "count.txt records the word count 2"
+        ],
+        "relations": [
+          {
+            "from": "S1",
+            "need": "seed.txt contains exactly the lines alpha and beta",
+            "fidelity": "exact"
+          }
+        ]
+      },
+      {
+        "depth": 2,
+        "stepId": "S4",
+        "produces": [
+          "report.txt combines the uppercase words and count"
+        ],
+        "relations": [
+          {
+            "from": "S2",
+            "need": "words.txt contains ALPHA and BETA on separate lines",
+            "fidelity": "exact"
+          },
+          {
+            "from": "S3",
+            "need": "count.txt records the word count 2",
+            "fidelity": "exact"
+          }
+        ]
+      },
+      {
+        "depth": 3,
+        "stepId": "S5",
+        "produces": [
+          "summary.txt is derived from report.txt"
+        ],
+        "relations": [
+          {
+            "from": "S4",
+            "need": "report.txt combines the uppercase words and count",
+            "fidelity": "exact"
+          }
+        ]
+      },
+      {
+        "depth": 3,
+        "stepId": "S6",
+        "produces": [
+          "audit.txt is derived from report.txt"
+        ],
+        "relations": [
+          {
+            "from": "S4",
+            "need": "report.txt combines the uppercase words and count",
+            "fidelity": "exact"
+          }
+        ]
+      },
+      {
+        "depth": 4,
+        "stepId": "S7",
+        "produces": [
+          "summary.txt has been verified against report.txt"
+        ],
+        "relations": [
+          {
+            "from": "S5",
+            "need": "summary.txt is derived from report.txt",
+            "fidelity": "exact"
+          },
+          {
+            "from": "S4",
+            "need": "report.txt combines the uppercase words and count",
+            "fidelity": "exact"
+          }
+        ]
+      },
+      {
+        "depth": 4,
+        "stepId": "S8",
+        "produces": [
+          "audit.txt has been verified against report.txt"
+        ],
+        "relations": [
+          {
+            "from": "S6",
+            "need": "audit.txt is derived from report.txt",
+            "fidelity": "exact"
+          },
+          {
+            "from": "S4",
+            "need": "report.txt combines the uppercase words and count",
+            "fidelity": "exact"
+          }
+        ]
+      }
+    ],
+    "issues": []
+  },
+  "edge_semantic_warnings": [],
+  "disclaimer": "same-wave steps are dependency-independent only; not resource- or file-safe. Prefer edges for eager starts when a step's own suppliers are done. forward_fidelity is a multi-root→multi-sink walk checking relationship readiness and need↔produces wording (exact or match); issues/edge_semantic_warnings are advisory, not structural failures. backchain_value compares draft vs this graph for one-shot-sufficient vs material lift."
+}
