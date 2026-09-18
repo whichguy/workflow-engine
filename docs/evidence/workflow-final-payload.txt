@@ -1,0 +1,4 @@
+check workflow path='plugins/workflow' ref='workflow-v0.2.0' sha='eb8895589afdd177eb096cc18f2b543b030012a9' catalog_version='0.2.0'
+OK   workflow version=0.2.0 body=plugins/workflow/skills/workflow/SKILL.md payload=checked
+
+failures=0 advisories=0

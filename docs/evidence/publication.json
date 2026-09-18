@@ -1,0 +1,77 @@
+{
+  "date": "2026-09-18",
+  "repository": "https://github.com/whichguy/workflow-engine",
+  "release": "https://github.com/whichguy/workflow-engine/releases/tag/workflow-v0.2.0",
+  "workflow_release_commit": "eb8895589afdd177eb096cc18f2b543b030012a9",
+  "workflow_qualified_runtime_commit": "219e290b731a9bf48b807f7fcb239eb298bb5758",
+  "runtime_package_tree_unchanged": true,
+  "source_dependency_release": {
+    "pr": "https://github.com/whichguy/skill-craft/pull/4",
+    "tested_commit": "6a120ed28eda5a1c5df0ac557dcfe94b4996ad46",
+    "merged_commit": "6ff36cf858a9dbe6ffe85cdadca0b85a425acea3",
+    "tested_and_promoted_tree": "3b8ab7e1c940c42c79c0a3a8c33fa8b46fc47a36",
+    "ci": "https://github.com/whichguy/skill-craft/actions/runs/35384302861",
+    "ci_conclusion": "success"
+  },
+  "marketplace_release": {
+    "pr": "https://github.com/whichguy/skill-craft-market/pull/2",
+    "tested_commit": "c67db137936a56f56fbe35f997ea20798a656444",
+    "merged_commit": "cdcfaeeec5144a40d46fddcb0ecb3dd7c5aec6ed",
+    "promoted_tree_matches_tested": true,
+    "ci": "https://github.com/whichguy/skill-craft-market/actions/runs/35386690452",
+    "promoted_ci": "https://github.com/whichguy/skill-craft-market/actions/runs/35386818219",
+    "ci_conclusion": "success"
+  },
+  "workflow_release_ci": {
+    "url": "https://github.com/whichguy/workflow-engine/actions/runs/35385696999",
+    "conclusion": "success",
+    "jobs": 4,
+    "per_job": {
+      "selected": 102,
+      "passed": 89,
+      "skipped_private_backchain": 13
+    }
+  },
+  "consumer_hosts": {
+    "codex": "0.155.0",
+    "claude_code": "2.1.276"
+  },
+  "evidence": {
+    "published-codex-consumer.json": "d88e4b6bdc9da1d8f8af68ba5bc88eec84dbb976e6c2bb94a723a1665c27debe",
+    "published-claude-consumer.json": "e8c9a30b083881c9476b01be02638cc1620107180051dbf223802e1fce5282a8",
+    "workflow-final-payload.txt": "73f0410141ad7f02132e199e96c4137db260537a576c5a195dfe62b1e7445d30",
+    "installed-current-ask-agent.json": "2efab5079191e72fda02951237a0a2987a120f32ee05946badf8199df6272a4b"
+  },
+  "normal_marketplaces_refreshed": [
+    "Codex skill-craft-market Git registration",
+    "Claude skill-craft-market Git registration"
+  ],
+  "normal_profile_preservation": {
+    "comparison_window": "immediately before and after named marketplace refresh",
+    "changed": "Claude known_marketplaces.json target lastUpdated only",
+    "unchanged": [
+      "Codex config hash",
+      "Claude settings hash",
+      "Claude installed plugin registry hash",
+      "all recorded Codex/Claude/Grok skill symlinks",
+      "marketplace source bindings and unrelated marketplace records"
+    ],
+    "new_plugin_installed_in_normal_profile": false,
+    "discovery": [
+      "workflow@skill-craft-market available",
+      "ask-agent@skill-craft-market available"
+    ]
+  },
+  "cleanup": {
+    "removed_owned_disposable_profiles": [
+      "profiles/codex",
+      "profiles/claude",
+      "profiles/codex-current",
+      "public-codex/profile",
+      "public-claude/profile"
+    ],
+    "retained": "run state, outputs and evidence outside disposable profiles; source/runtime identities in retained records are historical locators"
+  },
+  "scope": "Public Git discovery, fresh installation, package parity and installed helper execution in Codex/Claude. Native model evidence is separately recorded for Codex; no native model execution claimed for other hosts. Backchain installed using existing authenticated Git access.",
+  "release_channel": "prerelease; experimental local engine"
+}

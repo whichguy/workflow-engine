@@ -1,0 +1,35 @@
+{
+  "task": "Current Ask Report",
+  "status": "SUCCEEDED",
+  "native_handle": "/root/current_ask_report",
+  "native_type": "worker",
+  "fork_turns": "none",
+  "role_substitution": null,
+  "ask_agent_source": "6a120ed28eda5a1c5df0ac557dcfe94b4996ad46",
+  "ask_agent_card_sha256": "cd3d4fc04cceef1c1364be99432ba2a66cdbf55a91583cc484d8162844793699",
+  "workflow_source": "219e290b731a9bf48b807f7fcb239eb298bb5758",
+  "result": {
+    "count": 3,
+    "sum": 10
+  },
+  "terminal_status": "complete",
+  "cold_recovery_unchanged": true,
+  "collection": "Actual native completion notification after native observation wait; no rejected requests; no outstanding worker",
+  "probe_correction": "Created missing results directory before submitting callback; first local result write failed before any callback or transition",
+  "integration": "Not applicable; disposable output only, parent acceptance completed",
+  "files": {
+    "workspace/numbers.txt": "47919faa811c0fb6b9de1df114c464bac01749a6dfa3ccb8b3cba73ca126e0e0",
+    "workspace/report.json": "01061855b88c83c65e45b359f0c2050ad5aca6c1b47561d5814b05199794b9eb",
+    "run/packet.md": "94fa43208e1f40d970bfccc83a68a5057d086a3e77cfd1cfefb45a70e937bca0",
+    "run/state.md": "c9e10fe62d25ec62ad8c3e04c927b84f88beec155149ba25b5996530af5c7075",
+    "run/.workflow.executing.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "run/.workflow.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "run/receipts/88efe6b410974531aaf6e15de1c639a8.md": "7ef9e7fd89019e9f494f2f151bd67ba982ef1cca7fb78070142f50c10b230f79",
+    "run/receipts/6cdb7a067796423999b3458897a94d38.md": "0caffa3dd51c41b3b69869de7265c58cb89879fd59c6ebc237a3545168908240",
+    "run/results/6cdb7a067796423999b3458897a94d38.json": "38de829be82ac426c2de2cb350c4ae54a8cb78db9379984bd8bd85969c3b9c0c",
+    "run/logs/88efe6b410974531aaf6e15de1c639a8.command.stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "run/logs/6cdb7a067796423999b3458897a94d38.verify-0.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "run/logs/88efe6b410974531aaf6e15de1c639a8.command.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "run/logs/6cdb7a067796423999b3458897a94d38.verify-0.stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

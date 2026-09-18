@@ -1,5 +1,10 @@
 # Weave validation — 2026-09-18
 
+Publication is complete: [DISTRIBUTION.md](DISTRIBUTION.md) records the tagged
+release, merged source/catalog PRs, exact CI identities, fresh public-Git consumer
+checks, normal-profile preservation and disposable-profile cleanup. Evidence below
+retains the versions and scope of each earlier validation stage.
+
 ## Marketplace release candidate
 
 **102 tests passed in 76.139 seconds, with zero failures or skips.** The full
@@ -57,6 +62,16 @@ Native type: `worker`; no role substitution, collection error or outstanding wor
 This is one native planning case followed by serial command execution, not a
 cross-host model-quality benchmark. Structural validation does not independently
 prove the truth of semantic reviews.
+
+The updated ask-agent card at `6a120ed` also received a fresh native execution.
+**Current Ask Report** ran as `worker` with no inherited history or role
+substitution, checked a script-produced input receipt, and wrote count `3` and
+sum `10`. The parent collected its notification, independently checked the file,
+and submitted the completion callback; the installed engine verified the result
+and completed. Cold recovery preserved hashes. One probe-side result write first
+needed its parent directory created; it failed before any callback was submitted.
+No collection request was rejected and no worker remained pending.
+[Current-card execution receipt](evidence/installed-current-ask-agent.json).
 
 ## Prior adversarial validation
 

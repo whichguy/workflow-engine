@@ -1,0 +1,36 @@
+{
+  "host": "codex",
+  "source": "https://github.com/whichguy/skill-craft-market.git",
+  "marketplace_commit": "cdcfaeeec5144a40d46fddcb0ecb3dd7c5aec6ed",
+  "catalog_entries": 23,
+  "fresh_profile": true,
+  "packages": {
+    "workflow": {
+      "source_commit": "eb8895589afdd177eb096cc18f2b543b030012a9",
+      "path": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/public-codex/profile/plugins/cache/skill-craft-market/workflow/0.2.0",
+      "card_sha256": "f8cedd5a61fe8bdb7a5e4ea0fceb78bd2cbf871c1880c559c4c835a2d26c48bb"
+    },
+    "ask-agent": {
+      "source_commit": "6a120ed28eda5a1c5df0ac557dcfe94b4996ad46",
+      "path": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/public-codex/profile/plugins/cache/skill-craft-market/ask-agent/0.3.0",
+      "card_sha256": "cd3d4fc04cceef1c1364be99432ba2a66cdbf55a91583cc484d8162844793699"
+    },
+    "backchain": {
+      "source_commit": "ea2d040f377c269af3412332f9793c2610a61a1d",
+      "path": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/public-codex/profile/plugins/cache/skill-craft-market/backchain/0.3.4",
+      "card_sha256": "a92e5c85c92ac6e4eed5bda1d5ff552603366858eda83f536d70f3e2cf6a9a36"
+    },
+    "until-loop": {
+      "source_commit": "d10d5f6a49c12dec8dfe436e26271d6e449a6366",
+      "path": "/Users/dadleet/src/workflow-engine/.runs/marketplace-release-20260918/public-codex/profile/plugins/cache/skill-craft-market/until-loop/0.4.0-rc.2",
+      "card_sha256": "609959649f69f3ee5408bedbd6331806799495a8f59418e8d097c3d9f3c08028"
+    }
+  },
+  "workflow_payload_files_match": 12,
+  "recipe": "Braid",
+  "terminal_status": "complete",
+  "cold_recovery_unchanged": true,
+  "published_output_sha256": "2852e0132840b212ad2983e0bf6e079490885bcbd57cbef263767f6917f268a7",
+  "model_execution": false,
+  "authentication": "Existing Git authentication available for private Backchain; no new credentials stored"
+}

@@ -3,6 +3,34 @@
 The public repository is `whichguy/workflow-engine`. The portable plugin and skill
 identifier is `workflow`; the display name and checkout alias are Weave.
 
+## Published release
+
+`workflow-v0.2.0` is published at `eb8895589afdd177eb096cc18f2b543b030012a9`.
+Its runtime and package bytes match the qualified `219e290` candidate. The
+[GitHub release](https://github.com/whichguy/workflow-engine/releases/tag/workflow-v0.2.0)
+and [marketplace PR 2](https://github.com/whichguy/skill-craft-market/pull/2) are
+public; the catalog was promoted to `cdcfaeeec5144a40d46fddcb0ecb3dd7c5aec6ed`.
+
+Fresh Codex 0.155.0 and Claude Code 2.1.276 profiles independently cloned that
+public Git catalog and installed workflow 0.2.0, ask-agent 0.3.0, Backchain 0.3.4,
+and Until Loop 0.4.0-rc.2 at their exact catalog pins. Both Weave payloads matched
+all 12 package files and completed Braid with unchanged cold recovery. Private
+Backchain used existing authenticated Git access. This consumer check made no
+model calls; native Codex execution is recorded separately in VALIDATION.md.
+
+The tagged Weave CI passed all four jobs. Ask-agent's full source PR CI passed
+core, all three ShipLoop groups and the aggregate hermetic gate; its promoted
+tree is identical to the tested tree. Marketplace PR and promoted-main CI both
+passed. [Publication receipt and CI links](evidence/publication.json).
+
+The existing normal Codex and Claude marketplace registrations were refreshed.
+Both now expose the new packages. Before/after guards preserved recorded settings,
+installed plugin records, skill symlinks and marketplace source bindings; only
+Claude's target-marketplace update timestamp changed. No new package was installed
+in those normal profiles. Owned disposable test profiles were removed after
+retaining evidence. Their original absolute locators are historical run records,
+not live installed paths; run state and outputs remain outside those profiles.
+
 ## One source, generated package
 
 `skills/workflow/` is authoritative. Run `python3 scripts/sync-plugin-view.py` to
@@ -12,8 +40,8 @@ Claude/Codex manifests. No Backchain, Until Loop, ask-agent or Improve skill bod
 are copied. CI checks parity and the behavioral test suite on macOS/Linux.
 
 The skill-craft-market entry uses a real `git-subdir` (`plugins/workflow`) with a
-full immutable commit SHA. Existing source paths and historical run callbacks
-remain valid. Do not rename `skills/workflow` to match a display name.
+full immutable commit SHA. The canonical source path stays stable. Do not rename
+`skills/workflow` to match a display name.
 
 ## Conditional dependencies
 
@@ -68,8 +96,9 @@ full-payload verification with zero failures/advisories. That run used ask-agent
 `05c3329`; its replacement `6a120ed` separately passed a focused payload check
 with zero failures/advisories. An initial unauthenticated attempt could
 not read private Backchain and hit GitHub's public API limit; the authenticated
-rerun used the existing `gh` login without storing credentials. Public catalog
-promotion is a separate release step, not inferred from these candidate checks.
+rerun used the existing `gh` login without storing credentials. The final tagged
+Weave substitution also passed a focused payload check. Public promotion is
+independently verified above, not inferred from these candidate checks.
 
 Validation uses disposable profiles and isolated release checkouts. It does not
 replace normal installs or restore unrelated concurrent changes. The baseline
