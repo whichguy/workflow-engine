@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "name": "loom",
+  "goal": "Run repeated joins, overlapping diamonds, and all required terminal leaves.",
+  "steps": [
+    {
+      "id": "A",
+      "kind": "command",
+      "needs": [],
+      "argv": [
+        "python3",
+        "-c",
+        "from pathlib import Path; p=Path('evidence/A.txt'); p.parent.mkdir(parents=True, exist_ok=True); p.write_text('A\\n', encoding='utf-8')"
+      ],
+      "outputs": ["evidence/A.txt"]
+    },
+    {
+      "id": "B",
+      "kind": "agent",
+      "needs": ["A"],
+      "prompt": "Read evidence/A.txt. Write only evidence/B.txt with one concise observation. Do not choose a successor or edit another path.",
+      "outputs": ["evidence/B.txt"]
+    },
+    {
+      "id": "C",
+      "kind": "agent",
+      "needs": ["A"],
+      "prompt": "Read evidence/A.txt. Write only evidence/C.txt with a separate concise observation. Do not choose a successor or edit another path.",
+      "outputs": ["evidence/C.txt"]
+    },
+    {
+      "id": "D",
+      "kind": "command",
+      "needs": ["B", "C"],
+      "argv": [
+        "python3",
+        "-c",
+        "from pathlib import Path; assert Path('evidence/B.txt').is_file() and Path('evidence/C.txt').is_file(); Path('evidence/D.txt').write_text('D\\n', encoding='utf-8')"
+      ],
+      "outputs": ["evidence/D.txt"]
+    },
+    {
+      "id": "E",
+      "kind": "agent",
+      "needs": ["D"],
+      "prompt": "Read evidence/D.txt. Write only evidence/E.txt. Do not edit another path.",
+      "outputs": ["evidence/E.txt"]
+    },
+    {
+      "id": "F",
+      "kind": "agent",
+      "needs": ["D"],
+      "prompt": "Read evidence/D.txt. Write only evidence/F.txt. Do not edit another path.",
+      "outputs": ["evidence/F.txt"]
+    },
+    {
+      "id": "G",
+      "kind": "agent",
+      "needs": ["D"],
+      "prompt": "Read evidence/D.txt. Write only evidence/G.txt. Do not edit another path.",
+      "outputs": ["evidence/G.txt"]
+    },
+    {
+      "id": "H",
+      "kind": "agent",
+      "needs": ["E", "F"],
+      "prompt": "Read accepted E and F evidence. Write only evidence/H.txt. Do not edit another path.",
+      "outputs": ["evidence/H.txt"]
+    },
+    {
+      "id": "I",
+      "kind": "agent",
+      "needs": ["F", "G"],
+      "prompt": "Read accepted F and G evidence. Write only evidence/I.txt. Do not edit another path.",
+      "outputs": ["evidence/I.txt"]
+    },
+    {
+      "id": "J",
+      "kind": "command",
+      "needs": ["H", "I"],
+      "argv": [
+        "python3",
+        "-c",
+        "from pathlib import Path; assert Path('evidence/H.txt').is_file() and Path('evidence/I.txt').is_file(); Path('evidence/J.txt').write_text('J\\n', encoding='utf-8')"
+      ],
+      "outputs": ["evidence/J.txt"]
+    },
+    {
+      "id": "K",
+      "kind": "agent",
+      "needs": ["J"],
+      "prompt": "Read evidence/J.txt. Write only evidence/K.txt as a terminal result. Do not edit another path.",
+      "outputs": ["evidence/K.txt"]
+    },
+    {
+      "id": "L",
+      "kind": "agent",
+      "needs": ["J"],
+      "prompt": "Read evidence/J.txt. Write only evidence/L.txt as an independent terminal result. Do not edit another path.",
+      "outputs": ["evidence/L.txt"]
+    },
+    {
+      "id": "M",
+      "kind": "prompt",
+      "needs": [],
+      "prompt": "Write only evidence/M.txt as an independent terminal note. Do not select another step or edit another path.",
+      "outputs": ["evidence/M.txt"]
+    }
+  ]
+}

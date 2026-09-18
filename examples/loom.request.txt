@@ -1,0 +1,11 @@
+Create a workflow that exercises nested fan-out and fan-in under a durable
+file-driven executor. Preserve initial evidence, fan out to B and C, join them
+at D, fan out to E, F, and G, then create overlapping joins H(E,F) and I(F,G).
+Join H and I at J, fan out to independent terminal leaves K and L, and retain an
+independent terminal M that has no dependency. Include command, prompt, and
+agent steps with distinct declared outputs.
+
+Every step must wait for all of its direct dependency receipts. Completion must
+wait for K, L, and M even though no later join consumes those leaves. Keep state
+in files, let scripts own claim and transition selection, and let the skill only
+carry out the packet it receives.

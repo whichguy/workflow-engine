@@ -1,0 +1,12 @@
+Create a durable workflow for turning a short source note into a checked release note.
+
+The graph must have this shape: first preserve the source as immutable evidence;
+then fan out to an extractor and a classifier; join those two receipts into one
+consolidated fact; then fan out again to a writer and an independent checker; and
+finally join the writer and checker into a published note. State the definition of
+ready and definition of done for every step. Keep every declared output separate
+and immutable after acceptance. Do not make a step runnable until all of its direct
+dependencies have accepted receipts. Completion must wait for every required leaf.
+
+Use explicit execution bindings rather than inferring a command from prose. Return
+the Backchain plan and bindings for the workflow driver to validate and freeze.

@@ -1,0 +1,30 @@
+{
+  "workspace": "/Users/dadleet/src/workflow-engine",
+  "work": "Backchain standalone Until Loop binding: weave-validation-20260918-90716ff3. Perform one fresh complete dependency-planning review of only /Users/dadleet/src/workflow-engine/docs/experiments/planning/plan.json and its companions. Read the exact selected Backchain convergence-review prompt, convergence reference, full technical-lens index, selected Until Loop card, and package-relative ephemeral adapter. Trace every goal need backward and every supplier/consumer forward; inspect the all-lens screen, source identities, experiment contracts, candidate digest, and JSON validation evidence. Do not edit product code, tests, examples, sibling repositories, or the candidate unless a concrete planning defect is found. Do not commit, push, merge, run product execution, invent a Backchain counter, or substitute an ambient Until Loop runtime. Report one complete review through the returned callback with actual findings, checks, planning gaps, execution blockers, and a compact handoff.",
+  "exit_condition": "Two distinct complete trivial or no-change dependency-planning reviews find no planning gap in the frozen candidate; the candidate identity remains 90716ff35865f8e6da0af0155efe2aaf3a5ad718084aa77e7556439c007752fe; selected source identities remain hash-bound; the full lens screen and domain evidence are present; and the exact selected Until Loop terminal complete packet is preserved outside the ephemeral state file.",
+  "repeat_condition": "Repeat while a useful authorized in-scope plan repair or a required distinct whole-plan review remains. Stop incomplete if a selected source, candidate, context resource, identity check, or required review is missing, stale, or contradictory; do not substitute another runtime or widen scope.",
+  "required_trivial_reviews": 2,
+  "context": {
+    "request": "Based on any of these learnings plan out anything that you think we should do differently and create experiments to validate any assumptions or create more test cases. Again breadth of cases, corner cases, and complex compound cases are all important. I like to get those implemented and then run a test suite against them",
+    "scope": "Compatibility-native Backchain planning evidence only. The candidate and companion live under /Users/dadleet/src/workflow-engine/docs/experiments/planning. Product-code, tests, examples, sibling ShipLoop/Backchain/Until Loop repositories, commits, pushes, merges, publication, and project execution are excluded. Preserve other agents' work in the shared checkout.",
+    "authority": "The user authorized planning, experiments, test implementation, and test execution for Weave. This child may create or update only the named planning companions when an in-scope planning repair is necessary. It may not edit generic kernel acceptance policy, commit, push, merge, start another planner, or run an external deployment.",
+    "environment": "Use /opt/homebrew/opt/python@3.14/bin/python3.14 with the selected package-relative Until Loop adapter. Recheck the candidate and selected source hashes before each callback. JSON validation of draft.json, dependency-context.json, and plan.json has passed with python3 -m json.tool. The frozen baseline is /Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline-files.json.",
+    "resources": [
+      {"purpose": "exact original request rendering", "locator": "/Users/dadleet/src/workflow-engine/docs/experiments/planning/raw-user-request.txt"},
+      {"purpose": "frozen compatibility-native candidate", "locator": "/Users/dadleet/src/workflow-engine/docs/experiments/planning/plan.json"},
+      {"purpose": "generator draft", "locator": "/Users/dadleet/src/workflow-engine/docs/experiments/planning/draft.json"},
+      {"purpose": "native dependency context", "locator": "/Users/dadleet/src/workflow-engine/docs/experiments/planning/dependency-context.json"},
+      {"purpose": "full technical-lens applicability screen", "locator": "/Users/dadleet/src/workflow-engine/docs/experiments/planning/lens-screen.md"},
+      {"purpose": "validation plan and experiment contracts", "locator": "/Users/dadleet/src/workflow-engine/docs/experiments/validation-plan.md"},
+      {"purpose": "selected Backchain card", "locator": "/Users/dadleet/.codex/skills/backchain/SKILL.md"},
+      {"purpose": "selected Backchain convergence binding", "locator": "/Users/dadleet/.codex/skills/backchain/references/convergence.md"},
+      {"purpose": "selected Backchain full technical-lens index", "locator": "/Users/dadleet/.codex/skills/backchain/references/technical-lenses.md"},
+      {"purpose": "selected Backchain review primitive", "locator": "/Users/dadleet/.codex/skills/backchain/prompts/convergence-review.prompt.md"},
+      {"purpose": "selected Until Loop card", "locator": "/Users/dadleet/.codex/skills/until-loop/SKILL.md"},
+      {"purpose": "selected Until Loop callback adapter reference", "locator": "/Users/dadleet/.codex/skills/until-loop/references/runtime-ephemeral.md"},
+      {"purpose": "selected Until Loop package-relative adapter", "locator": "/Users/dadleet/.codex/skills/until-loop/scripts/until_loop_ephemeral.py"},
+      {"purpose": "pre-change test baseline", "locator": "/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline-files.json"},
+      {"purpose": "planned terminal receipt destination", "locator": "/Users/dadleet/src/workflow-engine/docs/experiments/planning/until-loop-terminal-receipt.json"}
+    ]
+  }
+}

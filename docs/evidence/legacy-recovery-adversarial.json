@@ -1,0 +1,24 @@
+{
+  "runtime_sha256": "240b6abad57b59bb28fe0dd12c6f4b6d0019a0d2f01c229826ffb07c47637095",
+  "scope": "cold recovery of historical live runs; no new native dispatch",
+  "runs": [
+    {
+      "run": ".runs/native-braid-v2/run",
+      "exit_code": 0,
+      "status": "complete",
+      "files_unchanged": true,
+      "file_count": 28,
+      "changed_files": [],
+      "protocol": "workflow-frontier-v2"
+    },
+    {
+      "run": ".runs/prompt-pilot/run",
+      "exit_code": 0,
+      "status": "complete",
+      "files_unchanged": true,
+      "file_count": 36,
+      "changed_files": [],
+      "protocol": "workflow-packet-v1"
+    }
+  ]
+}

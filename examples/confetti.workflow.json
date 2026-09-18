@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "name": "confetti",
+  "goal": "Prepare two independent terminal notes and complete only after both have accepted evidence.",
+  "steps": [
+    {
+      "id": "seed",
+      "kind": "command",
+      "needs": [],
+      "argv": ["python3", "-c", "from pathlib import Path; Path('brief.txt').write_text('Review the launch note.\\n')"],
+      "outputs": ["brief.txt"]
+    },
+    {
+      "id": "left-note",
+      "kind": "prompt",
+      "needs": ["seed"],
+      "prompt": "Read brief.txt. Write left-note.txt beginning with `LEFT:` and summarize one useful observation.",
+      "outputs": ["left-note.txt"],
+      "verify": [["python3", "-c", "from pathlib import Path; assert Path('left-note.txt').read_text().startswith('LEFT:')"]]
+    },
+    {
+      "id": "right-note",
+      "kind": "prompt",
+      "needs": ["seed"],
+      "prompt": "Read brief.txt. Write right-note.txt beginning with `RIGHT:` and summarize one independent observation.",
+      "outputs": ["right-note.txt"],
+      "verify": [["python3", "-c", "from pathlib import Path; assert Path('right-note.txt').read_text().startswith('RIGHT:')"]]
+    }
+  ]
+}

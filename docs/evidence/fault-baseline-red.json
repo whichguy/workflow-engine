@@ -1,0 +1,10 @@
+{
+  "command": "WEAVE_TEST_CLI=<frozen baseline>/skills/workflow/scripts/workflow python3 -m unittest discover -s tests -p test_fault_regressions.py -v",
+  "exit_code": 1,
+  "expected_to_fail": true,
+  "elapsed_seconds": 8.62,
+  "baseline_core_sha256": "028bd3d7c991b4d7a36d3dc03405eed37966981e6cf07fb438d3441f86d81534",
+  "test_sha256": "7dfe5c1855afa2e59205a11fc7ae0b22be550ced355e4af019d7d72407c87d50",
+  "log": "fault-baseline-red.txt",
+  "scope": "Regression sensitivity against the real frozen pre-change runtime; failures are expected, not a passing full suite."
+}

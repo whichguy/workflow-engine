@@ -1,0 +1,53 @@
+{
+  "source": "native",
+  "questions": [
+    {
+      "text": "Can a deterministic, standard-library-only oracle distinguish direct dependency readiness from depth-wave scheduling across declaration permutations and repeated fan-out/fan-in?",
+      "affected_steps": ["S2", "S3"],
+      "possible_graph_change": "May split topology and lifecycle fixtures so one oracle does not accidentally encode the runtime's own ordering.",
+      "source_needed": "inspect",
+      "priority": "high"
+    },
+    {
+      "text": "Which crash boundaries can be asserted without claiming exactly-once execution or native-handle reconnection?",
+      "affected_steps": ["S3", "S6"],
+      "possible_graph_change": "May add separate simulated protocol tests and a bounded live experiment rather than treating either as proof of the other.",
+      "source_needed": "inspect",
+      "priority": "high"
+    },
+    {
+      "text": "Does the shared-workspace disjoint-output declaration prevent undeclared writes, or only make their absence an attestation?",
+      "affected_steps": ["S4", "S6"],
+      "possible_graph_change": "May leave concurrent code/source mutation out of scope and require a future isolation design before widening concurrency.",
+      "source_needed": "inspect",
+      "priority": "high"
+    },
+    {
+      "text": "How can a host prove it used the currently selected Backchain and Until Loop cards without turning semantic convergence into a generic kernel prerequisite?",
+      "affected_steps": ["S5", "S7"],
+      "possible_graph_change": "May add a host-side companion audit helper and forged-evidence negatives while retaining structural accept-plan behavior.",
+      "source_needed": "inspect",
+      "priority": "high"
+    },
+    {
+      "text": "Which experiment outcomes would justify a future multi-host, per-agent-worktree, or concurrent-command design?",
+      "affected_steps": ["S4", "S6"],
+      "possible_graph_change": "May record those designs as deferred decisions because the current local POSIX run scope cannot establish them.",
+      "source_needed": "inspect",
+      "priority": "medium"
+    }
+  ],
+  "resolved_facts": [
+    "The v2 frontier admits only concurrent agent actions and retains commands, prompts, and planning as global exclusive owners.",
+    "A terminal success requires every workflow step to have an accepted receipt and no active action.",
+    "The current kernel accepts structural Backchain packaging and bindings; it does not inspect a semantic planning companion.",
+    "The selected Backchain 0.3.4 compatibility-native route delegates recurrence and terminal authority to the selected Until Loop adapter rather than using a Backchain pass counter.",
+    "The selected Until Loop ephemeral adapter removes state at terminal transition, so its exact terminal stdout must be retained outside the temporary state file."
+  ],
+  "assumptions": [
+    "A deterministic generated-DAG oracle will expose readiness or terminal-state regressions that hand-authored shapes miss.",
+    "A local crash-cut simulation can establish protocol behavior for the tested process boundaries but cannot establish exactly-once external effects.",
+    "A cooperative declared-output lease is insufficient evidence that an agent made no undeclared shared-workspace change.",
+    "A companion audit can verify recorded identity and receipt consistency without making semantic convergence a kernel-enforced policy."
+  ]
+}

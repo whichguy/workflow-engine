@@ -1,0 +1,192 @@
+test_agent_verifier_owner_kill_recovers_in_doubt_and_fences_replay (test_fault_regressions.FaultRegressionTests.test_agent_verifier_owner_kill_recovers_in_doubt_and_fences_replay) ... FAIL
+test_casefold_unicode_normalization_and_prefix_aliases_reject_before_claim (test_fault_regressions.FaultRegressionTests.test_casefold_unicode_normalization_and_prefix_aliases_reject_before_claim) ... 
+  test_casefold_unicode_normalization_and_prefix_aliases_reject_before_claim (test_fault_regressions.FaultRegressionTests.test_casefold_unicode_normalization_and_prefix_aliases_reject_before_claim) (label='casefold') ... FAIL
+  test_casefold_unicode_normalization_and_prefix_aliases_reject_before_claim (test_fault_regressions.FaultRegressionTests.test_casefold_unicode_normalization_and_prefix_aliases_reject_before_claim) (label='unicode-normalized') ... FAIL
+test_cold_next_during_live_verifier_returns_verifying_and_completion_survives (test_fault_regressions.FaultRegressionTests.test_cold_next_during_live_verifier_returns_verifying_and_completion_survives) ... ERROR
+test_conflicting_simultaneous_complete_accepts_at_most_one_callback (test_fault_regressions.FaultRegressionTests.test_conflicting_simultaneous_complete_accepts_at_most_one_callback) ... ok
+test_dead_verifier_a_is_not_masked_by_a_live_independent_b (test_fault_regressions.FaultRegressionTests.test_dead_verifier_a_is_not_masked_by_a_live_independent_b) ... ERROR
+test_distinct_unicode_output_paths_remain_valid (test_fault_regressions.FaultRegressionTests.test_distinct_unicode_output_paths_remain_valid) ... ok
+test_prompt_verifier_owner_kill_recovers_in_doubt_and_fences_replay (test_fault_regressions.FaultRegressionTests.test_prompt_verifier_owner_kill_recovers_in_doubt_and_fences_replay) ... FAIL
+test_simultaneous_identical_complete_runs_verifier_once (test_fault_regressions.FaultRegressionTests.test_simultaneous_identical_complete_runs_verifier_once) ... ok
+test_symlink_parent_alias_and_hardlinked_outputs_reject_before_action (test_fault_regressions.FaultRegressionTests.test_symlink_parent_alias_and_hardlinked_outputs_reject_before_action) ... FAIL
+
+======================================================================
+ERROR: test_cold_next_during_live_verifier_returns_verifying_and_completion_survives (test_fault_regressions.FaultRegressionTests.test_cold_next_during_live_verifier_returns_verifying_and_completion_survives)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 429, in test_cold_next_during_live_verifier_returns_verifying_and_completion_survives
+    cold = self.call("next", "--run-dir", self.run, timeout=3)
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 76, in call
+    result = self.raw(*args, timeout=timeout)
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 54, in raw
+    return subprocess.run(
+           ~~~~~~~~~~~~~~^
+        [PYTHON, str(CLI), *(str(arg) for arg in args)],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        check=False,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 557, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 1221, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 2154, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 1268, in _check_timeout
+    raise TimeoutExpired(
+    ...<2 lines>...
+            stderr=b''.join(stderr_seq) if stderr_seq else None)
+subprocess.TimeoutExpired: Command '['/opt/homebrew/opt/python@3.14/bin/python3.14', '/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'next', '--run-dir', '/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-41o4u37k/run']' timed out after 3 seconds
+
+======================================================================
+ERROR: test_dead_verifier_a_is_not_masked_by_a_live_independent_b (test_fault_regressions.FaultRegressionTests.test_dead_verifier_a_is_not_masked_by_a_live_independent_b)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 574, in test_dead_verifier_a_is_not_masked_by_a_live_independent_b
+    cold_during_b = self.call("next", "--run-dir", self.run, timeout=3)
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 76, in call
+    result = self.raw(*args, timeout=timeout)
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 54, in raw
+    return subprocess.run(
+           ~~~~~~~~~~~~~~^
+        [PYTHON, str(CLI), *(str(arg) for arg in args)],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        check=False,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 557, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 1221, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 2154, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 1268, in _check_timeout
+    raise TimeoutExpired(
+    ...<2 lines>...
+            stderr=b''.join(stderr_seq) if stderr_seq else None)
+subprocess.TimeoutExpired: Command '['/opt/homebrew/opt/python@3.14/bin/python3.14', '/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'next', '--run-dir', '/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-y0nu17t0/run']' timed out after 3 seconds
+
+======================================================================
+FAIL: test_agent_verifier_owner_kill_recovers_in_doubt_and_fences_replay (test_fault_regressions.FaultRegressionTests.test_agent_verifier_owner_kill_recovers_in_doubt_and_fences_replay)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 402, in test_agent_verifier_owner_kill_recovers_in_doubt_and_fences_replay
+    self._killed_verifier_recovers_once("agent")
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 361, in _killed_verifier_recovers_once
+    self.assertEqual(cold["status"], "in_doubt")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'dispatched' != 'in_doubt'
+- dispatched
++ in_doubt
+
+
+======================================================================
+FAIL: test_casefold_unicode_normalization_and_prefix_aliases_reject_before_claim (test_fault_regressions.FaultRegressionTests.test_casefold_unicode_normalization_and_prefix_aliases_reject_before_claim) (label='casefold')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 625, in test_casefold_unicode_normalization_and_prefix_aliases_reject_before_claim
+    self.assert_init_rejected_without_action(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.alias_document(outputs), label=label
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 603, in assert_init_rejected_without_action
+    self.error(
+    ~~~~~~~~~~^
+        "init",
+        ^^^^^^^
+    ...<5 lines>...
+        self.repo,
+        ^^^^^^^^^^
+    )
+    ^
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 88, in error
+    self.assertNotEqual(result.returncode, 0, f"expected failure: {packet!r}")
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 == 0 : expected failure: {'action_id': '1ef334bca54a4990ad62fa1db3ae5e3e', 'allowed_operation_argv_templates': {'complete': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'complete', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/casefold-run', '--action', '1ef334bca54a4990ad62fa1db3ae5e3e', '--result', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/casefold-run/results/1ef334bca54a4990ad62fa1db3ae5e3e.json'], 'retry': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'retry', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/casefold-run', '--action', '1ef334bca54a4990ad62fa1db3ae5e3e', '--reason', '<reason>', '--confirmed-stopped']}, 'allowed_operations': {'complete': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'complete', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/casefold-run', '--action', '1ef334bca54a4990ad62fa1db3ae5e3e', '--result', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/casefold-run/results/1ef334bca54a4990ad62fa1db3ae5e3e.json'], 'retry': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'retry', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/casefold-run', '--action', '1ef334bca54a4990ad62fa1db3ae5e3e', '--reason', '<reason>', '--confirmed-stopped']}, 'argv': None, 'attempt': 1, 'declared_outputs': ['Readme.txt'], 'dependencies': [], 'direct_dependency_receipts': [], 'goal': 'Prove recovery and evidence transitions remain script-owned.', 'kind': 'prompt', 'next_argv': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'complete', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/casefold-run', '--action', '1ef334bca54a4990ad62fa1db3ae5e3e', '--result', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/casefold-run/results/1ef334bca54a4990ad62fa1db3ae5e3e.json'], 'original_goal': 'Prove recovery and evidence transitions remain script-owned.', 'outputs': ['Readme.txt'], 'produces': [], 'prompt': 'Write only Readme.txt for step-0.', 'protocol': 'workflow-packet-v1', 'recovery_argv': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'next', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/casefold-run'], 'result_file': '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/casefold-run/results/1ef334bca54a4990ad62fa1db3ae5e3e.json', 'run_dir': '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/casefold-run', 'run_id': '7dd3a5d856524179b0de39d467f3653f', 'status': 'ready', 'step_id': 'step-0', 'timeout_seconds': 60, 'workspace': '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/repo'}
+
+======================================================================
+FAIL: test_casefold_unicode_normalization_and_prefix_aliases_reject_before_claim (test_fault_regressions.FaultRegressionTests.test_casefold_unicode_normalization_and_prefix_aliases_reject_before_claim) (label='unicode-normalized')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 625, in test_casefold_unicode_normalization_and_prefix_aliases_reject_before_claim
+    self.assert_init_rejected_without_action(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.alias_document(outputs), label=label
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 603, in assert_init_rejected_without_action
+    self.error(
+    ~~~~~~~~~~^
+        "init",
+        ^^^^^^^
+    ...<5 lines>...
+        self.repo,
+        ^^^^^^^^^^
+    )
+    ^
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 88, in error
+    self.assertNotEqual(result.returncode, 0, f"expected failure: {packet!r}")
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 == 0 : expected failure: {'action_id': '8512b402a6d24ed9a67edde40700f2c1', 'allowed_operation_argv_templates': {'complete': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'complete', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/unicode-normalized-run', '--action', '8512b402a6d24ed9a67edde40700f2c1', '--result', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/unicode-normalized-run/results/8512b402a6d24ed9a67edde40700f2c1.json'], 'retry': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'retry', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/unicode-normalized-run', '--action', '8512b402a6d24ed9a67edde40700f2c1', '--reason', '<reason>', '--confirmed-stopped']}, 'allowed_operations': {'complete': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'complete', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/unicode-normalized-run', '--action', '8512b402a6d24ed9a67edde40700f2c1', '--result', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/unicode-normalized-run/results/8512b402a6d24ed9a67edde40700f2c1.json'], 'retry': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'retry', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/unicode-normalized-run', '--action', '8512b402a6d24ed9a67edde40700f2c1', '--reason', '<reason>', '--confirmed-stopped']}, 'argv': None, 'attempt': 1, 'declared_outputs': ['café.txt'], 'dependencies': [], 'direct_dependency_receipts': [], 'goal': 'Prove recovery and evidence transitions remain script-owned.', 'kind': 'prompt', 'next_argv': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'complete', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/unicode-normalized-run', '--action', '8512b402a6d24ed9a67edde40700f2c1', '--result', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/unicode-normalized-run/results/8512b402a6d24ed9a67edde40700f2c1.json'], 'original_goal': 'Prove recovery and evidence transitions remain script-owned.', 'outputs': ['café.txt'], 'produces': [], 'prompt': 'Write only café.txt for step-0.', 'protocol': 'workflow-packet-v1', 'recovery_argv': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'next', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/unicode-normalized-run'], 'result_file': '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/unicode-normalized-run/results/8512b402a6d24ed9a67edde40700f2c1.json', 'run_dir': '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/unicode-normalized-run', 'run_id': '1134758a917e472d838abffd05bd9902', 'status': 'ready', 'step_id': 'step-0', 'timeout_seconds': 60, 'workspace': '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-43v6n5io/repo'}
+
+======================================================================
+FAIL: test_prompt_verifier_owner_kill_recovers_in_doubt_and_fences_replay (test_fault_regressions.FaultRegressionTests.test_prompt_verifier_owner_kill_recovers_in_doubt_and_fences_replay)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 399, in test_prompt_verifier_owner_kill_recovers_in_doubt_and_fences_replay
+    self._killed_verifier_recovers_once("prompt")
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 361, in _killed_verifier_recovers_once
+    self.assertEqual(cold["status"], "in_doubt")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'ready' != 'in_doubt'
+- ready
++ in_doubt
+
+
+======================================================================
+FAIL: test_symlink_parent_alias_and_hardlinked_outputs_reject_before_action (test_fault_regressions.FaultRegressionTests.test_symlink_parent_alias_and_hardlinked_outputs_reject_before_action)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 637, in test_symlink_parent_alias_and_hardlinked_outputs_reject_before_action
+    self.assert_init_rejected_without_action(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.alias_document(["real/evidence.txt", "alias/evidence.txt"]),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        label="symlink-parent",
+        ^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 603, in assert_init_rejected_without_action
+    self.error(
+    ~~~~~~~~~~^
+        "init",
+        ^^^^^^^
+    ...<5 lines>...
+        self.repo,
+        ^^^^^^^^^^
+    )
+    ^
+  File "/Users/dadleet/src/workflow-engine/tests/test_fault_regressions.py", line 88, in error
+    self.assertNotEqual(result.returncode, 0, f"expected failure: {packet!r}")
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 == 0 : expected failure: {'action_id': '9698a84463ea4bd09b6abbdb21bd2865', 'allowed_operation_argv_templates': {'complete': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'complete', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-rqwn8u40/symlink-parent-run', '--action', '9698a84463ea4bd09b6abbdb21bd2865', '--result', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-rqwn8u40/symlink-parent-run/results/9698a84463ea4bd09b6abbdb21bd2865.json'], 'retry': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'retry', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-rqwn8u40/symlink-parent-run', '--action', '9698a84463ea4bd09b6abbdb21bd2865', '--reason', '<reason>', '--confirmed-stopped']}, 'allowed_operations': {'complete': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'complete', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-rqwn8u40/symlink-parent-run', '--action', '9698a84463ea4bd09b6abbdb21bd2865', '--result', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-rqwn8u40/symlink-parent-run/results/9698a84463ea4bd09b6abbdb21bd2865.json'], 'retry': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'retry', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-rqwn8u40/symlink-parent-run', '--action', '9698a84463ea4bd09b6abbdb21bd2865', '--reason', '<reason>', '--confirmed-stopped']}, 'argv': None, 'attempt': 1, 'declared_outputs': ['real/evidence.txt'], 'dependencies': [], 'direct_dependency_receipts': [], 'goal': 'Prove recovery and evidence transitions remain script-owned.', 'kind': 'prompt', 'next_argv': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'complete', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-rqwn8u40/symlink-parent-run', '--action', '9698a84463ea4bd09b6abbdb21bd2865', '--result', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-rqwn8u40/symlink-parent-run/results/9698a84463ea4bd09b6abbdb21bd2865.json'], 'original_goal': 'Prove recovery and evidence transitions remain script-owned.', 'outputs': ['real/evidence.txt'], 'produces': [], 'prompt': 'Write only real/evidence.txt for step-0.', 'protocol': 'workflow-packet-v1', 'recovery_argv': ['/Users/dadleet/src/workflow-engine/.runs/assumption-audit-20260918/baseline/skills/workflow/scripts/workflow', 'next', '--run-dir', '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-rqwn8u40/symlink-parent-run'], 'result_file': '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-rqwn8u40/symlink-parent-run/results/9698a84463ea4bd09b6abbdb21bd2865.json', 'run_dir': '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-rqwn8u40/symlink-parent-run', 'run_id': '729e278167ed4453ad68fb762913d945', 'status': 'ready', 'step_id': 'step-0', 'timeout_seconds': 60, 'workspace': '/private/var/folders/_n/cth41tgs171367b_gghs0kgm0000gn/T/workflow-fault-test-rqwn8u40/repo'}
+
+----------------------------------------------------------------------
+Ran 9 tests in 8.557s
+
+FAILED (failures=5, errors=2)

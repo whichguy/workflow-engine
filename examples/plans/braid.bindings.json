@@ -1,0 +1,51 @@
+{
+  "seed": {
+    "kind": "command",
+    "argv": ["python3", "-c", "from pathlib import Path; Path('seed.txt').write_text('alpha\\nbeta\\n')"],
+    "outputs": ["seed.txt"],
+    "verify": [["python3", "-c", "from pathlib import Path; assert Path('seed.txt').read_text() == 'alpha\\nbeta\\n'"]],
+    "timeout_seconds": 30
+  },
+  "extract": {
+    "kind": "command",
+    "argv": ["python3", "-c", "from pathlib import Path; Path('extract.txt').write_text(','.join(Path('seed.txt').read_text().splitlines()))"],
+    "outputs": ["extract.txt"],
+    "verify": [["python3", "-c", "from pathlib import Path; assert Path('extract.txt').read_text() == 'alpha,beta'"]],
+    "timeout_seconds": 30
+  },
+  "classify": {
+    "kind": "command",
+    "argv": ["python3", "-c", "import json; from pathlib import Path; Path('classify.json').write_text(json.dumps({'lines': len(Path('seed.txt').read_text().splitlines())}))"],
+    "outputs": ["classify.json"],
+    "verify": [["python3", "-c", "import json; from pathlib import Path; assert json.loads(Path('classify.json').read_text()) == {'lines': 2}"]],
+    "timeout_seconds": 30
+  },
+  "consolidate": {
+    "kind": "command",
+    "argv": ["python3", "-c", "import json; from pathlib import Path; extract=Path('extract.txt').read_text(); facts=json.loads(Path('classify.json').read_text()); assert facts == {'lines': 2}; Path('consolidated.txt').write_text(extract + ' / ' + str(facts['lines']))"],
+    "outputs": ["consolidated.txt"],
+    "verify": [["python3", "-c", "from pathlib import Path; assert Path('consolidated.txt').read_text() == 'alpha,beta / 2'"]],
+    "timeout_seconds": 30
+  },
+  "compose": {
+    "kind": "command",
+    "argv": ["python3", "-c", "from pathlib import Path; Path('draft.md').write_text('# Draft\\n' + Path('consolidated.txt').read_text() + '\\n')"],
+    "outputs": ["draft.md"],
+    "verify": [["python3", "-c", "from pathlib import Path; assert Path('draft.md').read_text() == '# Draft\\nalpha,beta / 2\\n'"]],
+    "timeout_seconds": 30
+  },
+  "check": {
+    "kind": "command",
+    "argv": ["python3", "-c", "from pathlib import Path; assert Path('consolidated.txt').read_text() == 'alpha,beta / 2'; Path('check.txt').write_text('PASS\\n')"],
+    "outputs": ["check.txt"],
+    "verify": [["python3", "-c", "from pathlib import Path; assert Path('check.txt').read_text() == 'PASS\\n'"]],
+    "timeout_seconds": 30
+  },
+  "publish": {
+    "kind": "command",
+    "argv": ["python3", "-c", "from pathlib import Path; assert Path('check.txt').read_text() == 'PASS\\n'; Path('published.md').write_text(Path('draft.md').read_text() + 'Checked: PASS\\n')"],
+    "outputs": ["published.md"],
+    "verify": [["python3", "-c", "from pathlib import Path; assert Path('published.md').read_text() == '# Draft\\nalpha,beta / 2\\nChecked: PASS\\n'"]],
+    "timeout_seconds": 30
+  }
+}

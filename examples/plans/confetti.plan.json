@@ -1,0 +1,30 @@
+{
+  "goal": "Create a workflow that first writes a shared review brief, then fans out to two\nindependent terminal reviewers. Each reviewer must leave a separate immutable note\nand a verifier. There is deliberately no synthetic join step: the run is complete\nonly after both terminal receipts have been accepted. State readiness and done\ncriteria for each step, and provide explicit execution bindings.\n",
+  "initial_state": [],
+  "steps": [
+    {
+      "id": "seed",
+      "statement": "Ready: no prerequisite facts. Done: the shared review brief is preserved as immutable evidence.",
+      "produces": ["shared review brief"],
+      "inputs": [],
+      "origin": "seed"
+    },
+    {
+      "id": "left-note",
+      "statement": "Ready: the shared review brief is accepted. Done: the left terminal review note is verified and accepted.",
+      "produces": ["left terminal review note"],
+      "inputs": [{"need": "shared review brief", "from": "seed"}],
+      "origin": "seed"
+    },
+    {
+      "id": "right-note",
+      "statement": "Ready: the shared review brief is accepted. Done: the right terminal review note is verified and accepted.",
+      "produces": ["right terminal review note"],
+      "inputs": [{"need": "shared review brief", "from": "seed"}],
+      "origin": "seed"
+    }
+  ],
+  "parallel_groups": [["left-note", "right-note"]],
+  "unresolved": [],
+  "goal_needs": ["left terminal review note", "right terminal review note"]
+}

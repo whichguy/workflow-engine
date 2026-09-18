@@ -1,0 +1,29 @@
+{
+  "schema": "weave-planning-binding/v1",
+  "binding_id": "weave-validation-20260918-90716ff3",
+  "mode": "native",
+  "route": "compatibility-native",
+  "request_sha256": "f7a0195064b526867cfba7028afef74618384f4b2d22b9207950d87f3992d348",
+  "candidate": {
+    "locator": "/Users/dadleet/src/workflow-engine/docs/experiments/planning/plan.json",
+    "sha256": "90716ff35865f8e6da0af0155efe2aaf3a5ad718084aa77e7556439c007752fe"
+  },
+  "scope_locator": "/Users/dadleet/src/workflow-engine/docs/experiments/planning",
+  "sources": [
+    {"purpose": "backchain-card", "selected_locator": "/Users/dadleet/.codex/skills/backchain/SKILL.md", "resolved_locator": "/Users/dadleet/src/backchain/skills/backchain/SKILL.md", "source_root": "/Users/dadleet/src/backchain", "git_commit": "01d1c7db9fe4e78b962c028e508d37d7410d154a", "sha256": "a92e5c85c92ac6e4eed5bda1d5ff552603366858eda83f536d70f3e2cf6a9a36"},
+    {"purpose": "backchain-convergence", "selected_locator": "/Users/dadleet/.codex/skills/backchain/references/convergence.md", "resolved_locator": "/Users/dadleet/src/backchain/skills/backchain/references/convergence.md", "source_root": "/Users/dadleet/src/backchain", "git_commit": "01d1c7db9fe4e78b962c028e508d37d7410d154a", "sha256": "23e2cfb0655cd8cd77562ab97368926879b0f4807f2fc02d2ad202603b396854"},
+    {"purpose": "backchain-technical-lenses", "selected_locator": "/Users/dadleet/.codex/skills/backchain/references/technical-lenses.md", "resolved_locator": "/Users/dadleet/src/backchain/skills/backchain/references/technical-lenses.md", "source_root": "/Users/dadleet/src/backchain", "git_commit": "01d1c7db9fe4e78b962c028e508d37d7410d154a", "sha256": "fa1998bacdb8181741e0c6c8ca7d002b275ccf9714b17f9a2f6c3d621b533879"},
+    {"purpose": "backchain-convergence-review", "selected_locator": "/Users/dadleet/.codex/skills/backchain/prompts/convergence-review.prompt.md", "resolved_locator": "/Users/dadleet/src/backchain/skills/backchain/prompts/convergence-review.prompt.md", "source_root": "/Users/dadleet/src/backchain", "git_commit": "01d1c7db9fe4e78b962c028e508d37d7410d154a", "sha256": "05c8a3050a08a25c7bfc66ed7b55d29b1021d25edeb93eec93282896eaedb089"},
+    {"purpose": "until-loop-card", "selected_locator": "/Users/dadleet/.codex/skills/until-loop/SKILL.md", "resolved_locator": "/Users/dadleet/src/until-loop/plugins/until-loop/skills/until-loop/SKILL.md", "source_root": "/Users/dadleet/src/until-loop", "git_commit": "d10d5f6a49c12dec8dfe436e26271d6e449a6366", "sha256": "609959649f69f3ee5408bedbd6331806799495a8f59418e8d097c3d9f3c08028"},
+    {"purpose": "until-loop-runtime-reference", "selected_locator": "/Users/dadleet/.codex/skills/until-loop/references/runtime-ephemeral.md", "resolved_locator": "/Users/dadleet/src/until-loop/plugins/until-loop/skills/until-loop/references/runtime-ephemeral.md", "source_root": "/Users/dadleet/src/until-loop", "git_commit": "d10d5f6a49c12dec8dfe436e26271d6e449a6366", "sha256": "8d59ea1b8dcbabc6cffbe333dbe60ec638aa9f2ecab6a9cd4c1891ded8f058bb"},
+    {"purpose": "until-loop-adapter", "selected_locator": "/Users/dadleet/.codex/skills/until-loop/scripts/until_loop_ephemeral.py", "resolved_locator": "/Users/dadleet/src/until-loop/plugins/until-loop/skills/until-loop/scripts/until_loop_ephemeral.py", "source_root": "/Users/dadleet/src/until-loop", "git_commit": "d10d5f6a49c12dec8dfe436e26271d6e449a6366", "sha256": "6a4131f8a70b56a361556fbc61e924f060ebf1ba5d5f1387a6d6d735e89b4212"}
+  ],
+  "domain_evidence": [
+    {"purpose": "generator-draft", "locator": "/Users/dadleet/src/workflow-engine/docs/experiments/planning/draft.json", "sha256": "a051729253cba83ce1d13cac250e61f599ebc350bc2aa5cba4caa0a0e18fb84f"},
+    {"purpose": "dependency-context", "locator": "/Users/dadleet/src/workflow-engine/docs/experiments/planning/dependency-context.json", "sha256": "9ac7c8f0925ea48c230131dd1e4ec577d15fdb5a10d2f5f4b679b8b55d8b627d"},
+    {"purpose": "technical-lens-screen", "locator": "/Users/dadleet/src/workflow-engine/docs/experiments/planning/lens-screen.md", "sha256": "fb0519c08efce3fc77847c50f3d859b97a8beb506ecedca19d9f3228a832c0a5"},
+    {"purpose": "validation-plan", "locator": "/Users/dadleet/src/workflow-engine/docs/experiments/validation-plan.md", "sha256": "4de1b5512708c829d57c086a14830815f6e8cbbcfe31d32b09c983214f5f596f"},
+    {"purpose": "first-review-report", "locator": "/Users/dadleet/src/workflow-engine/docs/experiments/planning/until-loop-review-1-report.json", "sha256": "caea20114bfb81ba46d0c935541424d1b21ed4da236ca766686cf2fd2c53732d"},
+    {"purpose": "second-review-report", "locator": "/Users/dadleet/src/workflow-engine/docs/experiments/planning/until-loop-review-2-report.json", "sha256": "4d3b11a3fdcb2ad69a1ed7da7728e63e4ff43d4ad6d6382f2a526551fccf481d"}
+  ]
+}

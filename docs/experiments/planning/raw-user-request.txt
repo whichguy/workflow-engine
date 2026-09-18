@@ -1,0 +1,1 @@
+Based on any of these learnings plan out anything that you think we should do differently and create experiments to validate any assumptions or create more test cases. Again breadth of cases, corner cases, and complex compound cases are all important. I like to get those implemented and then run a test suite against them

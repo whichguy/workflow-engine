@@ -1,0 +1,64 @@
+{
+  "goal": "Create a durable workflow for turning a short source note into a checked release note.\n\nThe graph must have this shape: first preserve the source as immutable evidence;\nthen fan out to an extractor and a classifier; join those two receipts into one\nconsolidated fact; then fan out again to a writer and an independent checker; and\nfinally join the writer and checker into a published note. State the definition of\nready and definition of done for every step. Keep every declared output separate\nand immutable after acceptance. Do not make a step runnable until all of its direct\ndependencies have accepted receipts. Completion must wait for every required leaf.\n\nUse explicit execution bindings rather than inferring a command from prose. Return\nthe Backchain plan and bindings for the workflow driver to validate and freeze.\n",
+  "initial_state": [],
+  "steps": [
+    {
+      "id": "seed",
+      "statement": "Ready: no prerequisite facts. Done: seed.txt is preserved as immutable source evidence.",
+      "produces": ["immutable source evidence"],
+      "inputs": [],
+      "origin": "seed"
+    },
+    {
+      "id": "extract",
+      "statement": "Ready: immutable source evidence is accepted. Done: extracted source facts are recorded separately.",
+      "produces": ["extracted source facts"],
+      "inputs": [{"need": "immutable source evidence", "from": "seed"}],
+      "origin": "seed"
+    },
+    {
+      "id": "classify",
+      "statement": "Ready: immutable source evidence is accepted. Done: the source classification is recorded separately.",
+      "produces": ["source classification"],
+      "inputs": [{"need": "immutable source evidence", "from": "seed"}],
+      "origin": "seed"
+    },
+    {
+      "id": "consolidate",
+      "statement": "Ready: extracted facts and source classification are accepted. Done: one consolidated source fact is recorded.",
+      "produces": ["consolidated source fact"],
+      "inputs": [
+        {"need": "extracted source facts", "from": "extract"},
+        {"need": "source classification", "from": "classify"}
+      ],
+      "origin": "seed"
+    },
+    {
+      "id": "compose",
+      "statement": "Ready: the consolidated source fact is accepted. Done: a draft release note is written.",
+      "produces": ["draft release note"],
+      "inputs": [{"need": "consolidated source fact", "from": "consolidate"}],
+      "origin": "seed"
+    },
+    {
+      "id": "check",
+      "statement": "Ready: the consolidated source fact is accepted. Done: the checked consolidated fact is recorded.",
+      "produces": ["checked consolidated fact"],
+      "inputs": [{"need": "consolidated source fact", "from": "consolidate"}],
+      "origin": "seed"
+    },
+    {
+      "id": "publish",
+      "statement": "Ready: the draft release note and checked consolidated fact are accepted. Done: the published release note is written.",
+      "produces": ["published release note"],
+      "inputs": [
+        {"need": "draft release note", "from": "compose"},
+        {"need": "checked consolidated fact", "from": "check"}
+      ],
+      "origin": "seed"
+    }
+  ],
+  "parallel_groups": [["extract", "classify"], ["compose", "check"]],
+  "unresolved": [],
+  "goal_needs": ["published release note"]
+}

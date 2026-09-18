@@ -1,4 +1,4 @@
-# A generic workflow facility below ShipLoop
+# Weave: a generic workflow facility below ShipLoop
 
 ```mermaid
 flowchart LR
@@ -59,9 +59,11 @@ derived handoff. The kernel uses a local run lock and ShipLoop's write-ahead
 transaction store so state and its accompanying receipts recover together.
 
 Each accepted step releases only dependants whose prerequisites are satisfied.
-The initial pilot chooses one ready node deterministically, so an ordinary list
-and a dependency DAG share the same executor. Backchain's parallel groups describe
-dependencies; they do not establish safe shared-resource concurrency.
+The v1 pilot chooses one ready node deterministically. The opt-in v2 protocol
+adds per-action claims for bounded native-agent concurrency; its authoritative
+frontier replaces the single cursor. Both use accepted direct-dependency receipts.
+Backchain's parallel groups describe dependencies; they do not establish safe
+shared-resource concurrency. See [the v2 contract](CONCURRENCY.md).
 
 Commands are argv arrays. Prompt steps run in the current host; agent steps use
 the host's native delegation tools through ask-agent. A successful result is a
@@ -129,13 +131,14 @@ offers concrete related implementation evidence.
 4. **Workspace return:** extract ShipLoop's dirty-baseline capture and guarded
    return with caller-supplied path/retention policy. Prove original index/content
    preservation, source drift rejection, and idempotent return.
-5. **Concurrent dispatch if justified:** claims, native launch receipts, explicit
-   resources, separate workspaces/ownership, integration nodes and host recovery
-   tests. A lease expiry cannot prove the old agent stopped writing.
+5. **Concurrent dispatch pilot:** v2 adds claims, native launch receipts and
+   explicit disjoint output ownership in a shared workspace. Separate per-agent
+   worktrees, shared-resource declarations, integration nodes and cross-session
+   host recovery remain adoption gates. A lease expiry cannot prove a writer stopped.
 6. **Adopt for new ShipLoop runs only after parity:** version-pin adapter/runtime;
    existing runs retain their original protocol and selected engine. Test a fresh
    packaged consumer on each claimed host before publication.
 
-The pilot does not migrate ShipLoop, implement child loops or arbitrary branching,
-run DAG branches concurrently, capture dirty source baselines, or merge changes.
+The pilot does not migrate ShipLoop, implement child loops or conditional graphs,
+run commands concurrently, capture dirty source baselines, or merge changes.
 Those are explicit next extraction gates, not hidden claims of this prototype.

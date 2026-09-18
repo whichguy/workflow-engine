@@ -1,0 +1,18 @@
+{
+  "name": "workflow",
+  "version": "0.2.0",
+  "description": "Weave executes or resumes a file-defined workflow, or turns a request into a Backchain plan and executes it. Scripts own durable state and issue serial actions or a bounded frontier of native-agent actions.",
+  "author": {
+    "name": "whichguy",
+    "url": "https://github.com/whichguy"
+  },
+  "homepage": "https://github.com/whichguy/workflow-engine",
+  "repository": "https://github.com/whichguy/workflow-engine",
+  "license": "MIT",
+  "keywords": [
+    "workflow",
+    "weave",
+    "portable-skills",
+    "script-backed"
+  ]
+}

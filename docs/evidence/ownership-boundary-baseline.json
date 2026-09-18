@@ -1,0 +1,56 @@
+{
+  "assumption": "Disjoint declared paths and accepted receipts prove which native worker wrote each output.",
+  "assumption_supported": false,
+  "cleanup": "temporary workspace and run removed after observation",
+  "disposition": "Cooperative ownership only. Do not claim sandboxing or writer provenance; evaluate isolated per-agent workspaces before stronger claims.",
+  "experiment": "shared-workspace-writer-identity",
+  "native_handles": "simulated explicitly; no native agents launched",
+  "observation": {
+    "b_contents": "written-by-A-verifier",
+    "b_worker_wrote_output": false,
+    "workflow_status": "complete"
+  },
+  "runtime_sha256": "028bd3d7c991b4d7a36d3dc03405eed37966981e6cf07fb438d3441f86d81534",
+  "trace": [
+    {
+      "exit_code": 0,
+      "operation": "init",
+      "status": "ready"
+    },
+    {
+      "exit_code": 0,
+      "operation": "claim-ready",
+      "status": "ready"
+    },
+    {
+      "exit_code": 0,
+      "operation": "prepare-dispatch",
+      "status": "dispatching"
+    },
+    {
+      "exit_code": 0,
+      "operation": "dispatch",
+      "status": "dispatched"
+    },
+    {
+      "exit_code": 0,
+      "operation": "prepare-dispatch",
+      "status": "dispatching"
+    },
+    {
+      "exit_code": 0,
+      "operation": "dispatch",
+      "status": "dispatched"
+    },
+    {
+      "exit_code": 0,
+      "operation": "complete",
+      "status": "dispatched"
+    },
+    {
+      "exit_code": 0,
+      "operation": "complete",
+      "status": "complete"
+    }
+  ]
+}

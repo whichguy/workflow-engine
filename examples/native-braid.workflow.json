@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "name": "native-braid",
+  "goal": "Demonstrate two native fan-outs, two dependency joins, and a terminal proof that waits for every required leaf.",
+  "steps": [
+    {
+      "id": "A",
+      "kind": "command",
+      "needs": [],
+      "argv": [
+        "python3",
+        "-c",
+        "import json; from pathlib import Path; Path('brief.json').write_text(json.dumps({'numbers': [2, 3, 5]}, sort_keys=True) + '\\n', encoding='utf-8')"
+      ],
+      "outputs": ["brief.json"]
+    },
+    {
+      "id": "B",
+      "kind": "agent",
+      "needs": ["A"],
+      "prompt": "Read the accepted brief.json evidence. Independently calculate the count of its numbers, then write only left-count.json as a JSON object with one field named count and numeric value 3. Do not edit any other file.",
+      "outputs": ["left-count.json"]
+    },
+    {
+      "id": "C",
+      "kind": "agent",
+      "needs": ["A"],
+      "prompt": "Read the accepted brief.json evidence. Independently calculate the sum of its numbers, then write only right-sum.json as a JSON object with one field named sum and numeric value 10. Do not edit any other file.",
+      "outputs": ["right-sum.json"]
+    },
+    {
+      "id": "D",
+      "kind": "command",
+      "needs": ["B", "C"],
+      "argv": [
+        "python3",
+        "-c",
+        "import json; from pathlib import Path; left=json.loads(Path('left-count.json').read_text(encoding='utf-8')); right=json.loads(Path('right-sum.json').read_text(encoding='utf-8')); assert left == {'count': 3} and right == {'sum': 10}; Path('joined.json').write_text(json.dumps({**left, **right}, sort_keys=True) + '\\n', encoding='utf-8')"
+      ],
+      "outputs": ["joined.json"]
+    },
+    {
+      "id": "E",
+      "kind": "agent",
+      "needs": ["D"],
+      "prompt": "Read the accepted joined.json evidence. Write only count-check.txt containing one text line: count=3 followed by a newline. Do not edit any other file.",
+      "outputs": ["count-check.txt"]
+    },
+    {
+      "id": "F",
+      "kind": "agent",
+      "needs": ["D"],
+      "prompt": "Read the accepted joined.json evidence. Write only sum-check.txt containing one text line: sum=10 followed by a newline. Do not edit any other file.",
+      "outputs": ["sum-check.txt"]
+    },
+    {
+      "id": "G",
+      "kind": "command",
+      "needs": ["E", "F"],
+      "argv": [
+        "python3",
+        "-c",
+        "import json; from pathlib import Path; joined=json.loads(Path('joined.json').read_text(encoding='utf-8')); assert joined == {'count': 3, 'sum': 10}; assert Path('count-check.txt').read_text(encoding='utf-8') == 'count=3\\n'; assert Path('sum-check.txt').read_text(encoding='utf-8') == 'sum=10\\n'; Path('terminal-proof.json').write_text(json.dumps({'status': 'complete', 'count': 3, 'sum': 10}, sort_keys=True) + '\\n', encoding='utf-8')"
+      ],
+      "outputs": ["terminal-proof.json"]
+    }
+  ]
+}

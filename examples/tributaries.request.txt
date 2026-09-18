@@ -1,0 +1,6 @@
+Create a workflow with multiple independent roots and two uneven tributaries. One
+branch should finish after one dependent step; the other should take two dependent
+steps. Join only the two branch leaves, while allowing an independent terminal leaf
+to complete on its own. Preserve direct dependency receipts and wait for every
+required leaf before reporting completion. Provide explicit bindings and readiness
+and done criteria for every step.

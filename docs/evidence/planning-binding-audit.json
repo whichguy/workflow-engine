@@ -1,0 +1,22 @@
+{
+  "command": "python3 experiments/planning_binding_audit.py --companion docs/experiments/planning/compatibility-native.json --expected-bindings docs/experiments/planning/expected-bindings.json",
+  "exit_code": 0,
+  "helper_sha256": "a5a3a43e752bef13b4abe7f266c11bddf7f355dce5b80a492145c816653e9c6e",
+  "result": {
+    "checked": {
+      "domain_evidence_records": 6,
+      "source_records": 7,
+      "terminal_fields": [
+        "status",
+        "work.binding",
+        "context.request",
+        "context.scope",
+        "conditions.exit"
+      ]
+    },
+    "failure_codes": [],
+    "limitations": "This is a local mechanical consistency check. It does not authenticate a receipt, prove semantic review truth, or change generic kernel policy.",
+    "status": "consistent"
+  },
+  "scope": "Present local bindings and retained terminal record; no authenticity or semantic quality claim; no generic-kernel acceptance policy."
+}

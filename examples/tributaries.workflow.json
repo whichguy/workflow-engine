@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "name": "tributaries",
+  "goal": "Demonstrate multiple roots and uneven branches before one final join.",
+  "steps": [
+    {
+      "id": "join-all",
+      "kind": "command",
+      "needs": ["left-leaf", "right-final"],
+      "argv": ["python3", "-c", "from pathlib import Path; assert Path('left.txt').is_file() and Path('right-final.txt').is_file(); p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'join-all\\n'); Path('joined.txt').write_text(Path('left.txt').read_text() + ' + ' + Path('right-final.txt').read_text())"],
+      "outputs": ["joined.txt"]
+    },
+    {
+      "id": "right-final",
+      "kind": "command",
+      "needs": ["right-middle"],
+      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'right-final\\n'); Path('right-final.txt').write_text(Path('right-middle.txt').read_text() + '-final')"],
+      "outputs": ["right-final.txt"]
+    },
+    {
+      "id": "independent-leaf",
+      "kind": "command",
+      "needs": [],
+      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'independent-leaf\\n'); Path('independent.txt').write_text('independent')"],
+      "outputs": ["independent.txt"]
+    },
+    {
+      "id": "left-leaf",
+      "kind": "command",
+      "needs": ["left-root"],
+      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'left-leaf\\n'); Path('left.txt').write_text(Path('left-root.txt').read_text() + '-leaf')"],
+      "outputs": ["left.txt"]
+    },
+    {
+      "id": "right-middle",
+      "kind": "command",
+      "needs": ["right-root"],
+      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'right-middle\\n'); Path('right-middle.txt').write_text(Path('right-root.txt').read_text() + '-middle')"],
+      "outputs": ["right-middle.txt"]
+    },
+    {
+      "id": "left-root",
+      "kind": "command",
+      "needs": [],
+      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'left-root\\n'); Path('left-root.txt').write_text('left')"],
+      "outputs": ["left-root.txt"]
+    },
+    {
+      "id": "right-root",
+      "kind": "command",
+      "needs": [],
+      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'right-root\\n'); Path('right-root.txt').write_text('right')"],
+      "outputs": ["right-root.txt"]
+    }
+  ]
+}

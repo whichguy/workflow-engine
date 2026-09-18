@@ -1,0 +1,5 @@
+Create a workflow that first writes a shared review brief, then fans out to two
+independent terminal reviewers. Each reviewer must leave a separate immutable note
+and a verifier. There is deliberately no synthetic join step: the run is complete
+only after both terminal receipts have been accepted. State readiness and done
+criteria for each step, and provide explicit execution bindings.

@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "name": "braid",
+  "goal": "Build source evidence, join it, fan out to a draft and check, then join those results.",
+  "steps": [
+    {
+      "id": "seed",
+      "kind": "command",
+      "needs": [],
+      "argv": ["python3", "-c", "from pathlib import Path; Path('seed.txt').write_text('alpha\\nbeta\\n')"],
+      "outputs": ["seed.txt"]
+    },
+    {
+      "id": "extract",
+      "kind": "command",
+      "needs": ["seed"],
+      "argv": ["python3", "-c", "from pathlib import Path; Path('extract.txt').write_text(','.join(Path('seed.txt').read_text().splitlines()))"],
+      "outputs": ["extract.txt"]
+    },
+    {
+      "id": "classify",
+      "kind": "command",
+      "needs": ["seed"],
+      "argv": ["python3", "-c", "import json; from pathlib import Path; Path('classify.json').write_text(json.dumps({'lines': len(Path('seed.txt').read_text().splitlines())}))"],
+      "outputs": ["classify.json"]
+    },
+    {
+      "id": "consolidate",
+      "kind": "command",
+      "needs": ["extract", "classify"],
+      "argv": ["python3", "-c", "import json; from pathlib import Path; extract=Path('extract.txt').read_text(); facts=json.loads(Path('classify.json').read_text()); assert facts == {'lines': 2}; Path('consolidated.txt').write_text(extract + ' / ' + str(facts['lines']))"],
+      "outputs": ["consolidated.txt"]
+    },
+    {
+      "id": "compose",
+      "kind": "command",
+      "needs": ["consolidate"],
+      "argv": ["python3", "-c", "from pathlib import Path; Path('draft.md').write_text('# Draft\\n' + Path('consolidated.txt').read_text() + '\\n')"],
+      "outputs": ["draft.md"]
+    },
+    {
+      "id": "check",
+      "kind": "command",
+      "needs": ["consolidate"],
+      "argv": ["python3", "-c", "from pathlib import Path; assert Path('consolidated.txt').read_text() == 'alpha,beta / 2'; Path('check.txt').write_text('PASS\\n')"],
+      "outputs": ["check.txt"]
+    },
+    {
+      "id": "publish",
+      "kind": "command",
+      "needs": ["compose", "check"],
+      "argv": ["python3", "-c", "from pathlib import Path; assert Path('check.txt').read_text() == 'PASS\\n'; Path('published.md').write_text(Path('draft.md').read_text() + 'Checked: PASS\\n')"],
+      "outputs": ["published.md"]
+    }
+  ]
+}

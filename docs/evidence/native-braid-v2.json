@@ -1,0 +1,92 @@
+{
+  "accepted_steps": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G"
+  ],
+  "collection": "actual native completion notifications; all four collected; no rejected collection requests or remaining workers",
+  "command": "./weave init ... --isolate --max-active 2 --shared-workspace-disjoint followed by exact packet operations",
+  "isolation": "one detached worktree for this run; cooperative disjoint agent outputs",
+  "max_active": 2,
+  "native_tasks": [
+    {
+      "native_agent_type": "scoped-implementer",
+      "role_substitution": "none",
+      "status": "SUCCEEDED",
+      "task": "B"
+    },
+    {
+      "native_agent_type": "scoped-implementer",
+      "role_substitution": "none",
+      "status": "SUCCEEDED",
+      "task": "C"
+    },
+    {
+      "native_agent_type": "scoped-implementer",
+      "role_substitution": "none",
+      "status": "SUCCEEDED",
+      "task": "E"
+    },
+    {
+      "native_agent_type": "scoped-implementer",
+      "role_substitution": "none",
+      "status": "SUCCEEDED",
+      "task": "F"
+    }
+  ],
+  "observations": [
+    "B and C both dispatched before collection; D held",
+    "After B accepted, C pending and D held",
+    "D accepted then E and F both dispatched before collection; G held",
+    "After E accepted, F pending and G held",
+    "After F accepted, G ready; G command accepted before terminal",
+    "Cold terminal next and identical F callback replay did not modify any output"
+  ],
+  "outputs": {
+    "brief.json": {
+      "mtime_ns": 1789753798798515692,
+      "sha256": "879f0b1729dd958c2e56eb72c0932fb90374a8281139f78163116356b8cd2c91"
+    },
+    "count-check.txt": {
+      "mtime_ns": 1789753954190386775,
+      "sha256": "67b00e15fe7a76c5fb8b94f16ddb57805b3c4927f373e21549d1d43b12bbd209"
+    },
+    "joined.json": {
+      "mtime_ns": 1789753914273357382,
+      "sha256": "ff1db594408f824ae3c15f2f8c82b1c37b42a11e9ac72eb88bf8f4a4e062445e"
+    },
+    "left-count.json": {
+      "mtime_ns": 1789753848583749903,
+      "sha256": "20a12c13007b3a7a364d1771011e3c1cf06d1e675ec017752ee90c5cb3b4d7bd"
+    },
+    "right-sum.json": {
+      "mtime_ns": 1789753867523709264,
+      "sha256": "b7d21982a06babfc3cde5db5e9c8ee125a9a05b753b3110b1b2ef4d0fe4f118a"
+    },
+    "sum-check.txt": {
+      "mtime_ns": 1789754007891018059,
+      "sha256": "f0a78d0b6767157e21523a64683dab8a07af6a724818b5e74304740b43ea5ddf"
+    },
+    "terminal-proof.json": {
+      "mtime_ns": 1789754077941112569,
+      "sha256": "1e067917877ee2c28942fb69b66f43882f0928535cd966b2af84ff058d133472"
+    }
+  },
+  "run_dir": "/Users/dadleet/src/workflow-engine/.runs/native-braid-v2/run",
+  "run_id": "1472ab9683464e5dbf1611ebee88bbc8",
+  "runtime_sha256": "028bd3d7c991b4d7a36d3dc03405eed37966981e6cf07fb438d3441f86d81534",
+  "scope": "Live Codex native-agent execution of authored Native Braid; not a new native planning evaluation",
+  "source_base_commit": "30867038d9d0a6683376892782f844436c4d463d",
+  "source_clean_and_unchanged": true,
+  "state_version": 2,
+  "status": "complete",
+  "terminal_proof": {
+    "count": 3,
+    "status": "complete",
+    "sum": 10
+  }
+}

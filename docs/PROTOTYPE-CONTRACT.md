@@ -1,7 +1,12 @@
 # Prototype implementation contract
 
-Working name: workflow-engine. This is a local extraction pilot, not a migrated
+Working name: Weave; repository: workflow-engine. This is a local extraction pilot, not a migrated
 ShipLoop release. Files are authoritative; scripts control every transition.
+
+This document specifies the original serial v1 execution contract. It remains
+the default and applies to existing runs. Opt-in concurrent native-agent execution
+uses the separate [v2 contract](CONCURRENCY.md); the frozen workflow document
+format remains version 1. The checkout shorthand `./weave` forwards to the CLI.
 
 ## Shared source layout and ownership
 
@@ -36,6 +41,8 @@ timeout_seconds (positive number, finite; default 60), produces (string array).
 Strict unknown-field rejection. Reject cycles, missing/duplicate IDs, unsafe
 output paths and duplicate/nested output producers. Accepted outputs are immutable
 evidence files. Prompt/agent steps require at least one output or verifier.
+Output component comparisons use NFC normalization and case folding; existing
+symlink components, nonregular targets and hardlinked targets fail preflight.
 Commands may use their real exit status and captured log as minimum evidence.
 Steps execute in deterministic topological order, one at a time.
 No shell interpolation; explicit shell invocation is an authored trusted command.
@@ -59,6 +66,9 @@ Workflow files are executable input, not a sandbox.
   packet/block is reached. Never invoke a model or automatically retry.
 - `prepare-dispatch --run-dir DIR --action ID`: durably mark launch intent before
   native spawning. Recovery of this intent requires reconciliation, not relaunch.
+- `block --run-dir DIR --action ID --reason TEXT`: record a missing capability
+  for a ready, undispatched agent without inventing a handle. Same-reason replay
+  is harmless; launch intent already persisted requires reconciliation instead.
 - `dispatch --run-dir DIR --action ID --handle TEXT`: persist native launch
   receipt for agent action after host-native spawn confirms launch; repeat same
   handle is harmless; conflicting handle fails. Does not launch the agent.
@@ -99,6 +109,11 @@ Persist command intent before launch, then save PID/PGID, launch time and argv/c
 identity after Popen for diagnosis. A process crash or uncertain timeout leaves
 an in-doubt action and never automatically reruns it. Kernel and verification
 commands run in process groups, with bounded timeouts and stdout/stderr to files.
+Successful prompt/agent callbacks persist `verifying`, callback identity and
+per-check intent before launching verifiers. A separate execution lock binds its
+owner action while the run lock remains available to cold reads. An interrupted
+owner parks that action `in_doubt`; a nonzero verifier parks it `failed`. Callback
+replay cannot restart uncertain checks. This hardening also applies to v1 runs.
 Accepted evidence is immutable: detect changed direct output hashes on hydration.
 This is local single-host trusted-user storage, not a hostile multi-user sandbox.
 

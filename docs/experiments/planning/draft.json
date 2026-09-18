@@ -1,0 +1,183 @@
+{
+  "goal": "Weave has scoped, executable validation coverage and bounded evidence that either confirms or falsifies its v2 frontier and host-planning assumptions.",
+  "initial_state": [
+    "The requested validation scope is rendered for inspection in raw-user-request.txt and preserved byte-for-byte in the companion record.",
+    "The current Weave checkout has a frozen pre-change audit baseline at .runs/assumption-audit-20260918/baseline-files.json.",
+    "The checked-in v2 validation report records a local 53-test regression result and explicitly excludes multi-host locking, undeclared-write prevention, handle reconnection, concurrent commands, and dynamic graph edits."
+  ],
+  "goal_needs": [
+    "the validation plan identifies executable breadth, corner, and compound test cases with independent expected outcomes",
+    "bounded experiments have predeclared assumptions, falsifiers, cleanup, and decision consequences",
+    "the affected Weave tests pass against the candidate and retain an exact tested-file identity",
+    "the planning guidance binds the selected Backchain and Until Loop sources while keeping accept-plan structural-only"
+  ],
+  "steps": [
+    {
+      "id": "S1",
+      "statement": "The current runtime, test, evidence, and selected-skill baseline has been inventoried with material boundaries distinguished from claims.",
+      "produces": [
+        "a baseline inventory of current contracts, evidence, and excluded behaviors"
+      ],
+      "inputs": [],
+      "origin": "seed"
+    },
+    {
+      "id": "S2",
+      "statement": "An independent model of graph readiness, active ownership, retry, and terminal completion has been specified for deterministic validation.",
+      "produces": [
+        "an independent frontier-state oracle and scenario taxonomy"
+      ],
+      "inputs": [
+        {
+          "need": "a baseline inventory of current contracts, evidence, and excluded behaviors",
+          "from": "S1"
+        }
+      ],
+      "origin": "seed"
+    },
+    {
+      "id": "S3",
+      "statement": "Graph, claim, callback, retry, recovery, and terminal-leaf cases exercise direct dependency behavior against the independent oracle.",
+      "produces": [
+        "executable frontier topology and lifecycle regression cases"
+      ],
+      "inputs": [
+        {
+          "need": "an independent frontier-state oracle and scenario taxonomy",
+          "from": "S2"
+        }
+      ],
+      "origin": "seed"
+    },
+    {
+      "id": "S4",
+      "statement": "Resource ownership, evidence integrity, workspace isolation, and exclusive-action boundaries are exercised with explicit negative controls.",
+      "produces": [
+        "executable resource, evidence, and isolation boundary cases"
+      ],
+      "inputs": [
+        {
+          "need": "an independent frontier-state oracle and scenario taxonomy",
+          "from": "S2"
+        }
+      ],
+      "origin": "seed"
+    },
+    {
+      "id": "S5",
+      "statement": "Host planning guidance and a compatibility-native companion audit distinguish selected-source semantic evidence from the kernel's structural acceptance.",
+      "produces": [
+        "a selected-source planning companion contract and forgery-negative audit cases"
+      ],
+      "inputs": [
+        {
+          "need": "a baseline inventory of current contracts, evidence, and excluded behaviors",
+          "from": "S1"
+        }
+      ],
+      "origin": "seed"
+    },
+    {
+      "id": "S6",
+      "statement": "Bounded local experiments have runnable setup, controls, falsifiers, cleanup, and post-result decisions for the remaining consequential assumptions.",
+      "produces": [
+        "bounded experiment contracts and decision-report locations"
+      ],
+      "inputs": [
+        {
+          "need": "executable frontier topology and lifecycle regression cases",
+          "from": "S3"
+        },
+        {
+          "need": "executable resource, evidence, and isolation boundary cases",
+          "from": "S4"
+        },
+        {
+          "need": "a selected-source planning companion contract and forgery-negative audit cases",
+          "from": "S5"
+        }
+      ],
+      "origin": "seed"
+    },
+    {
+      "id": "S7",
+      "statement": "The approved regression and audit cases are implemented without widening the generic kernel's planning policy.",
+      "produces": [
+        "the candidate validation suite and host-planning guidance changes"
+      ],
+      "inputs": [
+        {
+          "need": "executable frontier topology and lifecycle regression cases",
+          "from": "S3"
+        },
+        {
+          "need": "executable resource, evidence, and isolation boundary cases",
+          "from": "S4"
+        },
+        {
+          "need": "a selected-source planning companion contract and forgery-negative audit cases",
+          "from": "S5"
+        }
+      ],
+      "origin": "seed"
+    },
+    {
+      "id": "S8",
+      "statement": "The validation plan's breadth, corner, and compound cases have been confirmed to carry independent expected outcomes.",
+      "produces": [
+        "the validation plan identifies executable breadth, corner, and compound test cases with independent expected outcomes"
+      ],
+      "inputs": [
+        {
+          "need": "the candidate validation suite and host-planning guidance changes",
+          "from": "S7"
+        }
+      ],
+      "origin": "seed"
+    },
+    {
+      "id": "S9",
+      "statement": "Every bounded experiment has been confirmed to define its assumption, falsifier, cleanup, and result-dependent decision.",
+      "produces": [
+        "bounded experiments have predeclared assumptions, falsifiers, cleanup, and decision consequences"
+      ],
+      "inputs": [
+        {
+          "need": "bounded experiment contracts and decision-report locations",
+          "from": "S6"
+        }
+      ],
+      "origin": "seed"
+    },
+    {
+      "id": "S10",
+      "statement": "The candidate's affected tests have been confirmed to pass with an exact identity manifest for the tested source and fixtures.",
+      "produces": [
+        "the affected Weave tests pass against the candidate and retain an exact tested-file identity"
+      ],
+      "inputs": [
+        {
+          "need": "the candidate validation suite and host-planning guidance changes",
+          "from": "S7"
+        }
+      ],
+      "origin": "seed"
+    },
+    {
+      "id": "S11",
+      "statement": "The selected Backchain and Until Loop identity evidence and structural-only kernel boundary have been confirmed in host planning guidance.",
+      "produces": [
+        "the planning guidance binds the selected Backchain and Until Loop sources while keeping accept-plan structural-only"
+      ],
+      "inputs": [
+        {
+          "need": "a selected-source planning companion contract and forgery-negative audit cases",
+          "from": "S5"
+        }
+      ],
+      "origin": "seed"
+    }
+  ],
+  "parallel_groups": [],
+  "unresolved": []
+}

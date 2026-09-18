@@ -1,0 +1,23 @@
+{
+  "seed": {
+    "kind": "command",
+    "argv": ["python3", "-c", "from pathlib import Path; Path('brief.txt').write_text('Review the launch note.\\n')"],
+    "outputs": ["brief.txt"],
+    "verify": [["python3", "-c", "from pathlib import Path; assert Path('brief.txt').read_text() == 'Review the launch note.\\n'"]],
+    "timeout_seconds": 30
+  },
+  "left-note": {
+    "kind": "prompt",
+    "prompt": "Read brief.txt. Write left-note.txt beginning with `LEFT:` and summarize one useful observation.",
+    "outputs": ["left-note.txt"],
+    "verify": [["python3", "-c", "from pathlib import Path; assert Path('left-note.txt').read_text().startswith('LEFT:')"]],
+    "timeout_seconds": 30
+  },
+  "right-note": {
+    "kind": "prompt",
+    "prompt": "Read brief.txt. Write right-note.txt beginning with `RIGHT:` and summarize one independent observation.",
+    "outputs": ["right-note.txt"],
+    "verify": [["python3", "-c", "from pathlib import Path; assert Path('right-note.txt').read_text().startswith('RIGHT:')"]],
+    "timeout_seconds": 30
+  }
+}
