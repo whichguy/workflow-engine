@@ -12,6 +12,8 @@ import sys
 import tempfile
 import unittest
 
+from spec_fixtures import specified
+
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / 'skills/workflow/scripts'
 sys.path.insert(0, str(SCRIPTS))
@@ -40,9 +42,23 @@ class RecoveryMatrixTests(unittest.TestCase):
         return value
 
     def init_agents(self):
-        definition = {'version': 1, 'name': 'crash-matrix', 'goal': 'Accept both independent leaves',
-                      'steps': [{'id': x, 'kind': 'agent', 'needs': [], 'prompt': 'Write only '+x+'.txt',
-                                 'outputs': [x+'.txt']} for x in ['A', 'B']]}
+        definition = specified(
+            {
+                'version': 1,
+                'name': 'crash-matrix',
+                'goal': 'Accept both independent leaves',
+                'steps': [
+                    {
+                        'id': x,
+                        'kind': 'agent',
+                        'needs': [],
+                        'prompt': 'Write only ' + x + '.txt',
+                        'outputs': [x + '.txt'],
+                    }
+                    for x in ['A', 'B']
+                ],
+            }
+        )
         path = self.base / 'workflow.json'
         path.write_text(json.dumps(definition))
         self.call('init', '--workflow', path, '--run-dir', self.run, '--repo', self.workspace,

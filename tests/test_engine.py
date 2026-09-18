@@ -18,6 +18,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from spec_fixtures import specified
+
 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "skills" / "workflow" / "scripts" / "workflow"
@@ -127,12 +129,14 @@ class WorkflowCliTest(unittest.TestCase):
         )
 
     def simple_document(self, steps: list[dict[str, Any]]) -> dict[str, Any]:
-        return {
-            "version": 1,
-            "name": "test-workflow",
-            "goal": self.goal,
-            "steps": steps,
-        }
+        return specified(
+            {
+                "version": 1,
+                "name": "test-workflow",
+                "goal": self.goal,
+                "steps": steps,
+            }
+        )
 
     @staticmethod
     def command_step(

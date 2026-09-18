@@ -18,6 +18,8 @@ import sys
 import time
 from typing import Any, Iterable, Mapping, Sequence
 
+from spec_fixtures import specified
+
 
 class OracleViolation(AssertionError):
     """The observed public packet violates the independently modeled contract."""
@@ -348,27 +350,31 @@ def seeded_workflow(seed: int, *, node_count: int | None = None) -> dict[str, An
         needs.append([ids[parent] for parent in sorted(set(chosen))])
     steps = [_step(ids[index], kinds[index], needs[index]) for index in range(count)]
     random_source.shuffle(steps)
-    return {
-        "version": 1,
-        "name": f"seeded-graph-{seed}",
-        "goal": "Exercise a durable, declared dependency graph from a deterministic seed.",
-        "steps": steps,
-    }
+    return specified(
+        {
+            "version": 1,
+            "name": f"seeded-graph-{seed}",
+            "goal": "Exercise a durable, declared dependency graph from a deterministic seed.",
+            "steps": steps,
+        }
+    )
 
 
 def redundant_transitive_workflow() -> dict[str, Any]:
     """A minimal explicit A -> B -> C plus A -> C receipt-set contract."""
-    return {
-        "version": 1,
-        "name": "redundant-transitive",
-        "goal": "Keep every declared direct dependency receipt, including a transitive edge.",
-        "steps": [
-            _step("A", "agent", []),
-            _step("B", "agent", ["A"]),
-            _step("C", "agent", ["A", "B"]),
-            _step("D", "prompt", ["C"]),
-        ],
-    }
+    return specified(
+        {
+            "version": 1,
+            "name": "redundant-transitive",
+            "goal": "Keep every declared direct dependency receipt, including a transitive edge.",
+            "steps": [
+                _step("A", "agent", []),
+                _step("B", "agent", ["A"]),
+                _step("C", "agent", ["A", "B"]),
+                _step("D", "prompt", ["C"]),
+            ],
+        }
+    )
 
 
 def loom_workflow() -> dict[str, Any]:
@@ -403,12 +409,14 @@ def loom_workflow() -> dict[str, Any]:
         "L": ["J"],
         "M": [],
     }
-    return {
-        "version": 1,
-        "name": "loom",
-        "goal": "Run repeated joins, overlapping diamonds, and all required terminal leaves.",
-        "steps": [_step(step_id, kinds[step_id], needs[step_id]) for step_id in kinds],
-    }
+    return specified(
+        {
+            "version": 1,
+            "name": "loom",
+            "goal": "Run repeated joins, overlapping diamonds, and all required terminal leaves.",
+            "steps": [_step(step_id, kinds[step_id], needs[step_id]) for step_id in kinds],
+        }
+    )
 
 
 @dataclass

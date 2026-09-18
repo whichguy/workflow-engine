@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "goal": "Create a durable workflow for turning a short source note into a checked release note.\n\nThe graph must have this shape: first preserve the source as immutable evidence;\nthen fan out to an extractor and a classifier; join those two receipts into one\nconsolidated fact; then fan out again to a writer and an independent checker; and\nfinally join the writer and checker into a published note. State the definition of\nready and definition of done for every step. Keep every declared output separate\nand immutable after acceptance. Do not make a step runnable until all of its direct\ndependencies have accepted receipts. Completion must wait for every required leaf.\n\nUse explicit execution bindings rather than inferring a command from prose. Return\nthe Backchain plan and bindings for the workflow driver to validate and freeze.\n",
+  "deliverables": [
+    {"id": "D-extract", "description": "Extracted source facts.", "requirements": ["FR-extract"]},
+    {"id": "D-classify", "description": "A classification of the source.", "requirements": ["FR-classify"]},
+    {"id": "D-note", "description": "A checked published release note.", "requirements": ["FR-note"]}
+  ],
+  "functional_requirements": [
+    {"id": "FR-extract", "description": "The source lines are extracted in order.", "acceptance": ["extract.txt equals alpha,beta"]},
+    {"id": "FR-classify", "description": "The source line count is classified.", "acceptance": ["classify.json records lines: 2"]},
+    {"id": "FR-note", "description": "The published note contains the consolidated fact and check result.", "acceptance": ["published.md includes alpha,beta / 2 and Checked: PASS"]}
+  ],
+  "nfrs": [
+    {"id": "NFR-evidence", "description": "Accepted source, branch, check, and publication evidence remains separately inspectable.", "acceptance": ["each declared output has a separate receipt and is not reused as another step output"], "scope": "all"}
+  ],
+  "assumptions": ["The local source note is the governing content for this fixture."],
+  "out_of_scope": ["External publication and deployment."],
+  "unresolved": []
+}

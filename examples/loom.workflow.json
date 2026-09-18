@@ -1,110 +1,102 @@
 {
-  "version": 1,
+  "version": 2,
   "name": "loom",
   "goal": "Run repeated joins, overlapping diamonds, and all required terminal leaves.",
+  "specification": {
+    "version": 1,
+    "goal": "Run repeated joins, overlapping diamonds, and all required terminal leaves.",
+    "deliverables": [
+      {"id": "D-left-source", "description": "The left source observation.", "requirements": ["FR-left-source"]},
+      {"id": "D-right-source", "description": "The right source observation.", "requirements": ["FR-right-source"]},
+      {"id": "D-E", "description": "The first post-join observation.", "requirements": ["FR-E"]},
+      {"id": "D-F", "description": "The shared post-join observation.", "requirements": ["FR-F"]},
+      {"id": "D-G", "description": "The second post-join observation.", "requirements": ["FR-G"]},
+      {"id": "D-K", "description": "The first terminal result.", "requirements": ["FR-K"]},
+      {"id": "D-L", "description": "The second terminal result.", "requirements": ["FR-L"]},
+      {"id": "D-independent", "description": "An independently completed terminal note.", "requirements": ["FR-independent"]}
+    ],
+    "functional_requirements": [
+      {"id": "FR-left-source", "description": "The left source observation is recorded.", "acceptance": ["evidence/B.txt exists"]},
+      {"id": "FR-right-source", "description": "The right source observation is recorded.", "acceptance": ["evidence/C.txt exists"]},
+      {"id": "FR-E", "description": "The E branch observation is recorded.", "acceptance": ["evidence/E.txt exists"]},
+      {"id": "FR-F", "description": "The F branch observation is recorded.", "acceptance": ["evidence/F.txt exists"]},
+      {"id": "FR-G", "description": "The G branch observation is recorded.", "acceptance": ["evidence/G.txt exists"]},
+      {"id": "FR-K", "description": "The K terminal result is recorded.", "acceptance": ["evidence/K.txt exists"]},
+      {"id": "FR-L", "description": "The L terminal result is recorded.", "acceptance": ["evidence/L.txt exists"]},
+      {"id": "FR-independent", "description": "The independent terminal result is recorded.", "acceptance": ["evidence/M.txt exists"]}
+    ],
+    "nfrs": [
+      {"id": "NFR-overlapping-joins", "description": "The overlapping analysis joins retain their declared direct evidence.", "acceptance": ["the release follows both H and I receipts, each with its declared suppliers"], "scope": ["D-E", "D-F", "D-G"]}
+    ],
+    "assumptions": [],
+    "out_of_scope": [],
+    "unresolved": []
+  },
   "steps": [
     {
-      "id": "A",
-      "kind": "command",
-      "needs": [],
-      "argv": [
-        "python3",
-        "-c",
-        "from pathlib import Path; p=Path('evidence/A.txt'); p.parent.mkdir(parents=True, exist_ok=True); p.write_text('A\\n', encoding='utf-8')"
-      ],
-      "outputs": ["evidence/A.txt"]
+      "id": "A", "kind": "command", "needs": [],
+      "argv": ["python3", "-c", "from pathlib import Path; p=Path('evidence/A.txt'); p.parent.mkdir(parents=True, exist_ok=True); p.write_text('A\\n', encoding='utf-8')"], "outputs": ["evidence/A.txt"],
+      "contract": {"role": "setup", "deliverables": ["D-left-source", "D-right-source", "D-E", "D-F", "D-G", "D-K", "D-L"], "requirements": [], "verifies": [], "ready_when": ["no prerequisite evidence is required"], "done_when": ["evidence/A.txt contains the shared starting evidence"], "shared_reason": "This setup supplies every branch that participates in the connected braid; the independent M leaf has its own root."}
     },
     {
-      "id": "B",
-      "kind": "agent",
-      "needs": ["A"],
-      "prompt": "Read evidence/A.txt. Write only evidence/B.txt with one concise observation. Do not choose a successor or edit another path.",
-      "outputs": ["evidence/B.txt"]
+      "id": "B", "kind": "agent", "needs": ["A"],
+      "prompt": "Read evidence/A.txt. Write only evidence/B.txt with one concise observation. Do not choose a successor or edit another path.", "outputs": ["evidence/B.txt"],
+      "contract": {"role": "deliverable", "deliverables": ["D-left-source"], "requirements": ["FR-left-source"], "verifies": [], "ready_when": ["the accepted shared evidence is available"], "done_when": ["evidence/B.txt contains the left observation"]}
     },
     {
-      "id": "C",
-      "kind": "agent",
-      "needs": ["A"],
-      "prompt": "Read evidence/A.txt. Write only evidence/C.txt with a separate concise observation. Do not choose a successor or edit another path.",
-      "outputs": ["evidence/C.txt"]
+      "id": "C", "kind": "agent", "needs": ["A"],
+      "prompt": "Read evidence/A.txt. Write only evidence/C.txt with a separate concise observation. Do not choose a successor or edit another path.", "outputs": ["evidence/C.txt"],
+      "contract": {"role": "deliverable", "deliverables": ["D-right-source"], "requirements": ["FR-right-source"], "verifies": [], "ready_when": ["the accepted shared evidence is available"], "done_when": ["evidence/C.txt contains the right observation"]}
     },
     {
-      "id": "D",
-      "kind": "command",
-      "needs": ["B", "C"],
-      "argv": [
-        "python3",
-        "-c",
-        "from pathlib import Path; assert Path('evidence/B.txt').is_file() and Path('evidence/C.txt').is_file(); Path('evidence/D.txt').write_text('D\\n', encoding='utf-8')"
-      ],
-      "outputs": ["evidence/D.txt"]
+      "id": "D", "kind": "command", "needs": ["B", "C"],
+      "argv": ["python3", "-c", "from pathlib import Path; assert Path('evidence/B.txt').is_file() and Path('evidence/C.txt').is_file(); Path('evidence/D.txt').write_text('D\\n', encoding='utf-8')"], "outputs": ["evidence/D.txt"],
+      "contract": {"role": "integration", "deliverables": ["D-left-source", "D-right-source"], "requirements": [], "verifies": ["FR-left-source", "FR-right-source"], "ready_when": ["the accepted B and C receipts are available"], "done_when": ["evidence/D.txt records their combined readiness"], "shared_reason": "The subsequent analysis branches need both independent source observations."}
     },
     {
-      "id": "E",
-      "kind": "agent",
-      "needs": ["D"],
-      "prompt": "Read evidence/D.txt. Write only evidence/E.txt. Do not edit another path.",
-      "outputs": ["evidence/E.txt"]
+      "id": "E", "kind": "agent", "needs": ["D"],
+      "prompt": "Read evidence/D.txt. Write only evidence/E.txt. Do not edit another path.", "outputs": ["evidence/E.txt"],
+      "contract": {"role": "deliverable", "deliverables": ["D-E"], "requirements": ["FR-E"], "verifies": [], "ready_when": ["the accepted combined source evidence is available"], "done_when": ["evidence/E.txt contains the E branch observation"]}
     },
     {
-      "id": "F",
-      "kind": "agent",
-      "needs": ["D"],
-      "prompt": "Read evidence/D.txt. Write only evidence/F.txt. Do not edit another path.",
-      "outputs": ["evidence/F.txt"]
+      "id": "F", "kind": "agent", "needs": ["D"],
+      "prompt": "Read evidence/D.txt. Write only evidence/F.txt. Do not edit another path.", "outputs": ["evidence/F.txt"],
+      "contract": {"role": "deliverable", "deliverables": ["D-F"], "requirements": ["FR-F"], "verifies": [], "ready_when": ["the accepted combined source evidence is available"], "done_when": ["evidence/F.txt contains the F branch observation"]}
     },
     {
-      "id": "G",
-      "kind": "agent",
-      "needs": ["D"],
-      "prompt": "Read evidence/D.txt. Write only evidence/G.txt. Do not edit another path.",
-      "outputs": ["evidence/G.txt"]
+      "id": "G", "kind": "agent", "needs": ["D"],
+      "prompt": "Read evidence/D.txt. Write only evidence/G.txt. Do not edit another path.", "outputs": ["evidence/G.txt"],
+      "contract": {"role": "deliverable", "deliverables": ["D-G"], "requirements": ["FR-G"], "verifies": [], "ready_when": ["the accepted combined source evidence is available"], "done_when": ["evidence/G.txt contains the G branch observation"]}
     },
     {
-      "id": "H",
-      "kind": "agent",
-      "needs": ["E", "F"],
-      "prompt": "Read accepted E and F evidence. Write only evidence/H.txt. Do not edit another path.",
-      "outputs": ["evidence/H.txt"]
+      "id": "H", "kind": "agent", "needs": ["E", "F"],
+      "prompt": "Read accepted E and F evidence. Write only evidence/H.txt. Do not edit another path.", "outputs": ["evidence/H.txt"],
+      "contract": {"role": "integration", "deliverables": ["D-E", "D-F"], "requirements": [], "verifies": ["FR-E", "FR-F"], "ready_when": ["the accepted E and F receipts are available"], "done_when": ["evidence/H.txt records the first overlapping join"], "shared_reason": "H is the first explicit overlap between the E and F deliverables."}
     },
     {
-      "id": "I",
-      "kind": "agent",
-      "needs": ["F", "G"],
-      "prompt": "Read accepted F and G evidence. Write only evidence/I.txt. Do not edit another path.",
-      "outputs": ["evidence/I.txt"]
+      "id": "I", "kind": "agent", "needs": ["F", "G"],
+      "prompt": "Read accepted F and G evidence. Write only evidence/I.txt. Do not edit another path.", "outputs": ["evidence/I.txt"],
+      "contract": {"role": "integration", "deliverables": ["D-F", "D-G"], "requirements": [], "verifies": ["FR-F", "FR-G"], "ready_when": ["the accepted F and G receipts are available"], "done_when": ["evidence/I.txt records the second overlapping join"], "shared_reason": "I is the second explicit overlap, sharing F without inventing an extra edge."}
     },
     {
-      "id": "J",
-      "kind": "command",
-      "needs": ["H", "I"],
-      "argv": [
-        "python3",
-        "-c",
-        "from pathlib import Path; assert Path('evidence/H.txt').is_file() and Path('evidence/I.txt').is_file(); Path('evidence/J.txt').write_text('J\\n', encoding='utf-8')"
-      ],
-      "outputs": ["evidence/J.txt"]
+      "id": "J", "kind": "command", "needs": ["H", "I"],
+      "argv": ["python3", "-c", "from pathlib import Path; assert Path('evidence/H.txt').is_file() and Path('evidence/I.txt').is_file(); Path('evidence/J.txt').write_text('J\\n', encoding='utf-8')"], "outputs": ["evidence/J.txt"],
+      "contract": {"role": "release", "deliverables": ["D-E", "D-F", "D-G"], "requirements": [], "verifies": ["NFR-overlapping-joins"], "ready_when": ["both accepted overlapping-join receipts are available"], "done_when": ["evidence/J.txt records the released combined analysis"], "shared_reason": "The release waits for both overlapping joins and verifies the scope-wide join constraint."}
     },
     {
-      "id": "K",
-      "kind": "agent",
-      "needs": ["J"],
-      "prompt": "Read evidence/J.txt. Write only evidence/K.txt as a terminal result. Do not edit another path.",
-      "outputs": ["evidence/K.txt"]
+      "id": "K", "kind": "agent", "needs": ["J"],
+      "prompt": "Read evidence/J.txt. Write only evidence/K.txt as a terminal result. Do not edit another path.", "outputs": ["evidence/K.txt"],
+      "contract": {"role": "deliverable", "deliverables": ["D-K"], "requirements": ["FR-K"], "verifies": ["FR-K"], "ready_when": ["the accepted released analysis is available"], "done_when": ["evidence/K.txt records the first terminal result"]}
     },
     {
-      "id": "L",
-      "kind": "agent",
-      "needs": ["J"],
-      "prompt": "Read evidence/J.txt. Write only evidence/L.txt as an independent terminal result. Do not edit another path.",
-      "outputs": ["evidence/L.txt"]
+      "id": "L", "kind": "agent", "needs": ["J"],
+      "prompt": "Read evidence/J.txt. Write only evidence/L.txt as an independent terminal result. Do not edit another path.", "outputs": ["evidence/L.txt"],
+      "contract": {"role": "deliverable", "deliverables": ["D-L"], "requirements": ["FR-L"], "verifies": ["FR-L"], "ready_when": ["the accepted released analysis is available"], "done_when": ["evidence/L.txt records the second terminal result"]}
     },
     {
-      "id": "M",
-      "kind": "prompt",
-      "needs": [],
-      "prompt": "Write only evidence/M.txt as an independent terminal note. Do not select another step or edit another path.",
-      "outputs": ["evidence/M.txt"]
+      "id": "M", "kind": "prompt", "needs": [],
+      "prompt": "Write only evidence/M.txt as an independent terminal note. Do not select another step or edit another path.", "outputs": ["evidence/M.txt"],
+      "contract": {"role": "deliverable", "deliverables": ["D-independent"], "requirements": ["FR-independent"], "verifies": ["FR-independent"], "ready_when": ["no prerequisite evidence is required"], "done_when": ["evidence/M.txt records the independent terminal note"]}
     }
   ]
 }

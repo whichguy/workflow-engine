@@ -1,0 +1,33 @@
+{
+  "date": "2026-09-18",
+  "package_version": "0.3.0",
+  "command": "python3 -m unittest discover -s tests -v",
+  "selected": 133,
+  "passed": 133,
+  "skipped": 0,
+  "failed": 0,
+  "elapsed_seconds": 67.832,
+  "python": "3.14.7",
+  "platform": "Darwin",
+  "suite_log_sha256": "6bd0614945cbdca49790fca8be75fc20e5efc657e43370c31d8e23e13538f09b",
+  "payload_sha256": {
+    ".claude-plugin/plugin.json": "69ac9d7db99c19448e6be0fbdf0e1c74322329543df9ea1389bb1ebb5445b443",
+    ".codex-plugin/plugin.json": "48cfad33157b11c51fefd397871dae930566cda86840fe013944928e101fdf81",
+    "LICENSE": "7835e66470f0230acd8ccb23e27e908198625d1fb817ceaa02ea89c36f5be28f",
+    "README.md": "db75d439e403a623a63cb5c217736507e1b7dd3cd9b19fd3964ceec03b1aeb6d",
+    "skills/workflow/SKILL.md": "b6a61be9268faed7e5ead6fa4908cb997ccf3593ba1862a225f977a1a130586e",
+    "skills/workflow/references/concurrency.md": "afd44de8a0d10beacb63077ab8be08830f7be24ddf4d2fa55266b3d938ddb6b6",
+    "skills/workflow/references/dependencies.md": "a9e973b3e857995a2dbe23827ec893e662e3457ffd0c70b195831a61ddd3749e",
+    "skills/workflow/references/planning.md": "31a2d215db763e4b6ef661ac0fa815e423b19b3ab0e80cec822480ecc2c4782f",
+    "skills/workflow/scripts/adapters.py": "bb05659758e6b7818e3c2b5b07abb8d527f6e934fbf9a7a3f0909df5b999f48b",
+    "skills/workflow/scripts/specification.py": "e35df0ccc937f512bb24e24a9c132347c2cecd97a88638573a2f42f94be95bda",
+    "skills/workflow/scripts/store.py": "744588f6e18c91ba144529ea4134c6a82258128427b25bc047e3cb3ee4c4388c",
+    "skills/workflow/scripts/workflow": "fff227746c3a10d45f80f7a8bb830f16eb726b906d91711bd129ed9727c30e57",
+    "skills/workflow/scripts/workflow_core.py": "e780414e3e667faa3df336c86de8d472ab40642e6e780001e6feb688ea405d74"
+  },
+  "boundaries": [
+    "Local suite includes real selected-Backchain packaging; authored fixtures do not prove model planning.",
+    "Native pilot evidence is recorded separately.",
+    "Shared ownership probe is a limitation characterization, not an isolation claim."
+  ]
+}

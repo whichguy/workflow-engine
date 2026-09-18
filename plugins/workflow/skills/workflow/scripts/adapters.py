@@ -363,7 +363,7 @@ def _validate_binding(step_id: str, binding: Any) -> Dict[str, Any]:
         raise AdapterError(f"binding for {step_id} must be an object")
     keys = set(binding)
     kind = binding.get("kind")
-    optional = {"outputs", "verify", "timeout_seconds"}
+    optional = {"outputs", "verify", "timeout_seconds", "contract"}
     if kind == "command":
         required = {"kind", "argv"}
     elif kind in {"prompt", "agent"}:
@@ -423,6 +423,8 @@ def _validate_binding(step_id: str, binding: Any) -> Dict[str, Any]:
                 f"binding for {step_id} requires outputs or verify for host evidence"
             )
         compiled["prompt"] = prompt
+    if "contract" in binding:
+        compiled["contract"] = binding["contract"]
     return compiled
 
 

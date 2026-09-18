@@ -31,6 +31,7 @@ def _build_parser() -> argparse.ArgumentParser:
     entry = init.add_mutually_exclusive_group(required=True)
     entry.add_argument("--workflow", type=_path)
     entry.add_argument("--prompt-file", type=_path)
+    entry.add_argument("--spec-file", type=_path)
     init.add_argument("--backchain-root", type=_path)
     init.add_argument("--run-dir", required=True, type=_path)
     init.add_argument("--repo", required=True, type=_path)
@@ -45,6 +46,11 @@ def _build_parser() -> argparse.ArgumentParser:
     claim.add_argument("--run-dir", required=True, type=_path)
     claim.add_argument("--limit", required=True, type=int)
     claim.add_argument("--request-id", required=True)
+
+    spec = subcommands.add_parser("accept-spec")
+    spec.add_argument("--run-dir", required=True, type=_path)
+    spec.add_argument("--action", required=True)
+    spec.add_argument("--spec", required=True, type=_path)
 
     accept = subcommands.add_parser("accept-plan")
     accept.add_argument("--run-dir", required=True, type=_path)
@@ -95,7 +101,7 @@ def _dispatch(kernel: WorkflowKernel, arguments: argparse.Namespace) -> dict[str
     if command == "init":
         if arguments.workflow is not None:
             if arguments.backchain_root is not None:
-                raise WorkflowError("--backchain-root is only valid with --prompt-file")
+                raise WorkflowError("--backchain-root is only valid with --prompt-file or --spec-file")
             return kernel.init_workflow(
                 workflow_file=arguments.workflow,
                 run_dir=arguments.run_dir,
@@ -105,7 +111,13 @@ def _dispatch(kernel: WorkflowKernel, arguments: argparse.Namespace) -> dict[str
                 shared_workspace_disjoint=arguments.shared_workspace_disjoint,
             )
         if arguments.backchain_root is None:
-            raise WorkflowError("--prompt-file requires --backchain-root")
+            raise WorkflowError("--prompt-file or --spec-file requires --backchain-root")
+        if arguments.spec_file is not None:
+            return kernel.init_spec(
+                spec_file=arguments.spec_file, backchain_root=arguments.backchain_root,
+                run_dir=arguments.run_dir, repo=arguments.repo, isolate=arguments.isolate,
+                max_active=arguments.max_active, shared_workspace_disjoint=arguments.shared_workspace_disjoint,
+            )
         return kernel.init_prompt(
             prompt_file=arguments.prompt_file,
             backchain_root=arguments.backchain_root,
@@ -123,6 +135,8 @@ def _dispatch(kernel: WorkflowKernel, arguments: argparse.Namespace) -> dict[str
             limit=arguments.limit,
             request_id=arguments.request_id,
         )
+    if command == "accept-spec":
+        return kernel.accept_spec(run_dir=arguments.run_dir, action_id=arguments.action, spec_file=arguments.spec)
     if command == "accept-plan":
         return kernel.accept_plan(
             run_dir=arguments.run_dir,

@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "goal": "Create a workflow that first writes a shared review brief, then fans out to two\nindependent terminal reviewers. Each reviewer must leave a separate immutable note\nand a verifier. There is deliberately no synthetic join step: the run is complete\nonly after both terminal receipts have been accepted. State readiness and done\ncriteria for each step, and provide explicit execution bindings.\n",
+  "deliverables": [
+    {"id": "D-left-note", "description": "A checked left terminal review note.", "requirements": ["FR-left-note"]},
+    {"id": "D-right-note", "description": "A checked right terminal review note.", "requirements": ["FR-right-note"]}
+  ],
+  "functional_requirements": [
+    {"id": "FR-left-note", "description": "The left reviewer provides a distinct observation.", "acceptance": ["left-note.txt begins with LEFT:"]},
+    {"id": "FR-right-note", "description": "The right reviewer provides a distinct observation.", "acceptance": ["right-note.txt begins with RIGHT:"]}
+  ],
+  "nfrs": [
+    {"id": "NFR-independent-evidence", "description": "Each terminal review retains its own immutable output and verifier result.", "acceptance": ["the two accepted note receipts are distinct and each verifier passes"], "scope": "all"}
+  ],
+  "assumptions": ["The host will perform both prompt packets and submit their actual results."],
+  "out_of_scope": ["A synthetic aggregate review note."],
+  "unresolved": []
+}

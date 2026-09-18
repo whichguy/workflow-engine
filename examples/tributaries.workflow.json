@@ -1,56 +1,62 @@
 {
-  "version": 1,
+  "version": 2,
   "name": "tributaries",
   "goal": "Demonstrate multiple roots and uneven branches before one final join.",
+  "specification": {
+    "version": 1,
+    "goal": "Demonstrate multiple roots and uneven branches before one final join.",
+    "deliverables": [
+      {"id": "D-left", "description": "The left branch result.", "requirements": ["FR-left"]},
+      {"id": "D-right", "description": "The right branch result.", "requirements": ["FR-right"]},
+      {"id": "D-independent", "description": "A separately completed root leaf.", "requirements": ["FR-independent"]}
+    ],
+    "functional_requirements": [
+      {"id": "FR-left", "description": "The left branch ends in left-leaf evidence.", "acceptance": ["left.txt ends with -leaf"]},
+      {"id": "FR-right", "description": "The right branch ends in right-final evidence.", "acceptance": ["right-final.txt ends with -final"]},
+      {"id": "FR-independent", "description": "The independent root completes its own evidence.", "acceptance": ["independent.txt contains independent"]}
+    ],
+    "nfrs": [
+      {"id": "NFR-main-join", "description": "The main join consumes both uneven branch results.", "acceptance": ["joined.txt is created only after left and right final evidence exists"], "scope": ["D-left", "D-right"]}
+    ],
+    "assumptions": [],
+    "out_of_scope": [],
+    "unresolved": []
+  },
   "steps": [
     {
-      "id": "join-all",
-      "kind": "command",
-      "needs": ["left-leaf", "right-final"],
-      "argv": ["python3", "-c", "from pathlib import Path; assert Path('left.txt').is_file() and Path('right-final.txt').is_file(); p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'join-all\\n'); Path('joined.txt').write_text(Path('left.txt').read_text() + ' + ' + Path('right-final.txt').read_text())"],
-      "outputs": ["joined.txt"]
+      "id": "join-all", "kind": "command", "needs": ["left-leaf", "right-final"],
+      "argv": ["python3", "-c", "from pathlib import Path; assert Path('left.txt').is_file() and Path('right-final.txt').is_file(); p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'join-all\\n'); Path('joined.txt').write_text(Path('left.txt').read_text() + ' + ' + Path('right-final.txt').read_text())"], "outputs": ["joined.txt"],
+      "contract": {"role": "integration", "deliverables": ["D-left", "D-right"], "requirements": [], "verifies": ["FR-left", "FR-right", "NFR-main-join"], "ready_when": ["the accepted left leaf and right final receipts are available"], "done_when": ["joined.txt combines the two uneven branch outcomes"], "shared_reason": "Only the main joined artifact needs both branch deliverables."}
     },
     {
-      "id": "right-final",
-      "kind": "command",
-      "needs": ["right-middle"],
-      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'right-final\\n'); Path('right-final.txt').write_text(Path('right-middle.txt').read_text() + '-final')"],
-      "outputs": ["right-final.txt"]
+      "id": "right-final", "kind": "command", "needs": ["right-middle"],
+      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'right-final\\n'); Path('right-final.txt').write_text(Path('right-middle.txt').read_text() + '-final')"], "outputs": ["right-final.txt"],
+      "contract": {"role": "deliverable", "deliverables": ["D-right"], "requirements": ["FR-right"], "verifies": [], "ready_when": ["the accepted right middle artifact is available"], "done_when": ["right-final.txt contains the right final result"]}
     },
     {
-      "id": "independent-leaf",
-      "kind": "command",
-      "needs": [],
-      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'independent-leaf\\n'); Path('independent.txt').write_text('independent')"],
-      "outputs": ["independent.txt"]
+      "id": "independent-leaf", "kind": "command", "needs": [],
+      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'independent-leaf\\n'); Path('independent.txt').write_text('independent')"], "outputs": ["independent.txt"],
+      "contract": {"role": "deliverable", "deliverables": ["D-independent"], "requirements": ["FR-independent"], "verifies": ["FR-independent"], "ready_when": ["no prerequisite evidence is required"], "done_when": ["independent.txt records the independent terminal result"]}
     },
     {
-      "id": "left-leaf",
-      "kind": "command",
-      "needs": ["left-root"],
-      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'left-leaf\\n'); Path('left.txt').write_text(Path('left-root.txt').read_text() + '-leaf')"],
-      "outputs": ["left.txt"]
+      "id": "left-leaf", "kind": "command", "needs": ["left-root"],
+      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'left-leaf\\n'); Path('left.txt').write_text(Path('left-root.txt').read_text() + '-leaf')"], "outputs": ["left.txt"],
+      "contract": {"role": "deliverable", "deliverables": ["D-left"], "requirements": ["FR-left"], "verifies": [], "ready_when": ["the accepted left root is available"], "done_when": ["left.txt contains the left leaf result"]}
     },
     {
-      "id": "right-middle",
-      "kind": "command",
-      "needs": ["right-root"],
-      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'right-middle\\n'); Path('right-middle.txt').write_text(Path('right-root.txt').read_text() + '-middle')"],
-      "outputs": ["right-middle.txt"]
+      "id": "right-middle", "kind": "command", "needs": ["right-root"],
+      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'right-middle\\n'); Path('right-middle.txt').write_text(Path('right-root.txt').read_text() + '-middle')"], "outputs": ["right-middle.txt"],
+      "contract": {"role": "setup", "deliverables": ["D-right"], "requirements": [], "verifies": [], "ready_when": ["the accepted right root is available"], "done_when": ["right-middle.txt provides the right final prerequisite"], "shared_reason": "This is a reusable prerequisite layer for the one right-branch deliverable."}
     },
     {
-      "id": "left-root",
-      "kind": "command",
-      "needs": [],
-      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'left-root\\n'); Path('left-root.txt').write_text('left')"],
-      "outputs": ["left-root.txt"]
+      "id": "left-root", "kind": "command", "needs": [],
+      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'left-root\\n'); Path('left-root.txt').write_text('left')"], "outputs": ["left-root.txt"],
+      "contract": {"role": "setup", "deliverables": ["D-left"], "requirements": [], "verifies": [], "ready_when": ["no prerequisite evidence is required"], "done_when": ["left-root.txt provides the left branch prerequisite"], "shared_reason": "This root supplies only the left branch deliverable."}
     },
     {
-      "id": "right-root",
-      "kind": "command",
-      "needs": [],
-      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'right-root\\n'); Path('right-root.txt').write_text('right')"],
-      "outputs": ["right-root.txt"]
+      "id": "right-root", "kind": "command", "needs": [],
+      "argv": ["python3", "-c", "from pathlib import Path; p=Path('schedule.log'); p.write_text((p.read_text() if p.exists() else '') + 'right-root\\n'); Path('right-root.txt').write_text('right')"], "outputs": ["right-root.txt"],
+      "contract": {"role": "setup", "deliverables": ["D-right"], "requirements": [], "verifies": [], "ready_when": ["no prerequisite evidence is required"], "done_when": ["right-root.txt provides the right branch prerequisite"], "shared_reason": "This root supplies only the right branch deliverable."}
     }
   ]
 }

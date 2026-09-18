@@ -1,25 +1,83 @@
 {
-  "version": 1,
+  "version": 2,
   "name": "numbers-report",
   "goal": "Create and verify a small numbers report",
+  "specification": {
+    "version": 1,
+    "goal": "Create and verify a small numbers report",
+    "deliverables": [
+      {
+        "id": "D-report",
+        "description": "A checked count-and-sum report.",
+        "requirements": ["FR-report"]
+      }
+    ],
+    "functional_requirements": [
+      {
+        "id": "FR-report",
+        "description": "The report states the count and sum of the supplied numbers.",
+        "acceptance": ["report.json equals {count: 3, sum: 10}"]
+      }
+    ],
+    "nfrs": [
+      {
+        "id": "NFR-evidence",
+        "description": "The report has an inspectable verification record.",
+        "acceptance": ["verification.txt records a passing check"],
+        "scope": "all"
+      }
+    ],
+    "assumptions": [],
+    "out_of_scope": [],
+    "unresolved": []
+  },
   "steps": [
     {
       "id": "collect",
       "kind": "command",
+      "needs": [],
       "argv": ["python3", "-c", "from pathlib import Path; Path('numbers.csv').write_text('2\\n3\\n5\\n')"],
-      "outputs": ["numbers.csv"]
+      "outputs": ["numbers.csv"],
+      "contract": {
+        "role": "setup",
+        "deliverables": ["D-report"],
+        "requirements": [],
+        "verifies": [],
+        "ready_when": ["no prerequisite evidence is required"],
+        "done_when": ["numbers.csv contains the three source values"],
+        "shared_reason": "The source dataset is the prerequisite for the one report deliverable."
+      }
     },
     {
       "id": "summarize",
       "kind": "command",
+      "needs": ["collect"],
       "argv": ["python3", "-c", "import json; from pathlib import Path; numbers=[int(x) for x in Path('numbers.csv').read_text().splitlines()]; Path('report.json').write_text(json.dumps({'count':len(numbers),'sum':sum(numbers)}))"],
-      "outputs": ["report.json"]
+      "outputs": ["report.json"],
+      "contract": {
+        "role": "deliverable",
+        "deliverables": ["D-report"],
+        "requirements": ["FR-report"],
+        "verifies": [],
+        "ready_when": ["the accepted source dataset is available"],
+        "done_when": ["report.json states the count and sum"]
+      }
     },
     {
       "id": "verify",
       "kind": "command",
+      "needs": ["summarize"],
       "argv": ["python3", "-c", "import json; from pathlib import Path; report=json.loads(Path('report.json').read_text()); assert report == {'count':3,'sum':10}; Path('verification.txt').write_text('PASS: 3 numbers total 10\\n')"],
-      "outputs": ["verification.txt"]
+      "outputs": ["verification.txt"],
+      "contract": {
+        "role": "verification",
+        "deliverables": ["D-report"],
+        "requirements": [],
+        "verifies": ["FR-report", "NFR-evidence"],
+        "ready_when": ["the accepted report is available"],
+        "done_when": ["verification.txt records the passing count-and-sum check"],
+        "shared_reason": "This checks both the report requirement and its durable evidence."
+      }
     }
   ]
 }

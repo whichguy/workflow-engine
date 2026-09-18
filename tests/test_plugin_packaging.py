@@ -95,6 +95,23 @@ class PluginPackagingTests(unittest.TestCase):
         for operation, callback in packet["allowed_operations"].items():
             self.assertEqual(callback[0], expected, (operation, callback))
 
+    def accept_specification(
+        self,
+        packet: dict[str, Any],
+        specification: Path,
+        *,
+        cwd: Path,
+    ) -> dict[str, Any]:
+        """Copy an authored companion into the exact specification callback path."""
+        spec_file = Path(str(packet["spec_file"]))
+        spec_file.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(specification, spec_file)
+        callback = list(packet["next_argv"])
+        self.assertEqual(packet["allowed_operations"]["accept_spec"], callback)
+        self.assertEqual(callback[-2], "--spec")
+        self.assertEqual(callback[-1], str(spec_file))
+        return self.packet(callback, cwd=cwd)
+
     @staticmethod
     def strings_in(value: Any) -> Iterable[str]:
         if isinstance(value, str):
@@ -243,6 +260,48 @@ class PluginPackagingTests(unittest.TestCase):
 
         self.assertEqual(prompt["status"], "complete")
         self.assert_packet_uses_installed_cli(prompt, cli)
+
+    def test_copied_package_prompt_specification_callback_uses_example_companion(self) -> None:
+        installed = self.installed_package()
+        cli = self.installed_cli(installed)
+        unrelated_cwd = self.base / "unrelated-cwd"
+        unrelated_cwd.mkdir()
+        fixture_dir = self.base / "copied-fixture"
+        fixture_dir.mkdir()
+        request = fixture_dir / "braid.request.txt"
+        specification = fixture_dir / "braid.spec.json"
+        shutil.copy2(ROOT / "examples" / "braid.request.txt", request)
+        shutil.copy2(ROOT / "examples" / "plans" / "braid.spec.json", specification)
+        source_specification = json.loads(specification.read_text(encoding="utf-8"))
+        self.assertEqual(source_specification["goal"], request.read_text(encoding="utf-8"))
+        workspace = self.base / "workspace"
+        workspace.mkdir()
+        run_dir = self.base / "run"
+
+        initial = self.packet(
+            [
+                cli,
+                "init",
+                "--prompt-file",
+                request,
+                "--backchain-root",
+                workspace,
+                "--repo",
+                workspace,
+                "--run-dir",
+                run_dir,
+            ],
+            cwd=unrelated_cwd,
+        )
+        self.assertEqual(initial["kind"], "specification")
+        self.assertEqual(initial["status"], "specification")
+        self.assert_packet_uses_installed_cli(initial, cli)
+
+        planning = self.accept_specification(initial, specification, cwd=unrelated_cwd)
+        self.assertEqual(planning["kind"], "planning")
+        self.assertEqual(planning["status"], "planning")
+        self.assertEqual(planning["specification"], source_specification)
+        self.assert_packet_uses_installed_cli(planning, cli)
 
     def test_copied_package_rejects_a_missing_selected_backchain_source(self) -> None:
         installed = self.installed_package()

@@ -1,7 +1,7 @@
 {
   "name": "workflow",
-  "version": "0.2.0",
-  "description": "Weave executes or resumes a file-defined workflow, or turns a request into a Backchain plan and executes it. Scripts own durable state and issue serial actions or a bounded frontier of native-agent actions.",
+  "version": "0.3.0",
+  "description": "Weave reconciles a specification, functional requirements, NFRs, and atomic step contracts before it executes or resumes a durable dependency workflow. Scripts own state and issue serial actions or a bounded frontier of native-agent actions.",
   "author": {
     "name": "whichguy",
     "url": "https://github.com/whichguy"
@@ -19,7 +19,7 @@
   "interface": {
     "displayName": "Weave",
     "shortDescription": "Durable workflows controlled by scripts.",
-    "longDescription": "Weave executes or resumes a file-defined workflow, or turns a request into a Backchain plan and executes it. Scripts own durable state and issue serial actions or a bounded frontier of native-agent actions.",
+    "longDescription": "Weave reconciles a specification, functional requirements, NFRs, and atomic step contracts before it executes or resumes a durable dependency workflow. Scripts own state and issue serial actions or a bounded frontier of native-agent actions.",
     "developerName": "whichguy",
     "category": "Productivity",
     "capabilities": [

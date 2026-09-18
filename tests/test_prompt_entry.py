@@ -7,6 +7,8 @@ import sys
 import tempfile
 import unittest
 
+from spec_fixtures import authored_specification, planning_fixture
+
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / 'skills/workflow/scripts/workflow'
 BACKCHAIN = Path(os.environ.get('WORKFLOW_TEST_BACKCHAIN_ROOT', ROOT.parent / 'backchain'))
@@ -24,8 +26,11 @@ class PromptEntryTests(unittest.TestCase):
         self.request = 'Write a report.\nPreserve the exact original request.\n'
         prompt = self.root / 'request.txt'
         prompt.write_text(self.request)
-        self.first = self.call('init', '--prompt-file', prompt, '--backchain-root', BACKCHAIN,
-                               '--repo', self.repo, '--run-dir', self.run)
+        specification = self.call('init', '--prompt-file', prompt, '--backchain-root', BACKCHAIN,
+                                  '--repo', self.repo, '--run-dir', self.run)
+        self.first = self.accept_specification(
+            specification, authored_specification(self.request)
+        )
 
     def call(self, *args, success=True):
         result = subprocess.run([sys.executable, str(CLI), *map(str, args)],
@@ -37,6 +42,19 @@ class PromptEntryTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0, payload)
         return payload
 
+    def accept_specification(self, packet, specification):
+        spec_file = Path(packet['spec_file'])
+        spec_file.parent.mkdir(parents=True, exist_ok=True)
+        spec_file.write_text(json.dumps(specification))
+        callback = list(packet['next_argv'])
+        self.assertEqual(packet['allowed_operations']['accept_spec'], callback)
+        self.assertEqual(callback[-2], '--spec')
+        self.assertEqual(callback[-1], str(spec_file))
+        result = subprocess.run(callback, capture_output=True, text=True, timeout=30)
+        payload = json.loads(result.stdout)
+        self.assertEqual(result.returncode, 0, payload)
+        return payload
+
     def candidates(self, goal=None):
         plan = {'goal': self.request if goal is None else goal, 'initial_state': [],
                 'steps': [{'id':'S1','statement':'A report has been written',
@@ -45,6 +63,7 @@ class PromptEntryTests(unittest.TestCase):
         bindings = {'S1': {'kind':'command', 'argv':[sys.executable, '-c',
                     "from pathlib import Path; Path('report.txt').write_text('done')"],
                     'outputs':['report.txt']}}
+        _specification, bindings = planning_fixture(plan, bindings)
         plan_path, bindings_path = self.root / 'plan.json', self.root / 'bindings.json'
         plan_path.write_text(json.dumps(plan))
         bindings_path.write_text(json.dumps(bindings))
@@ -81,7 +100,9 @@ class PromptEntryTests(unittest.TestCase):
         run = self.root / 'windows-run'
         packet = self.call('init', '--prompt-file', prompt, '--backchain-root', BACKCHAIN,
                            '--repo', self.repo, '--run-dir', run)
+        planning = self.accept_specification(packet, authored_specification(exact))
         self.assertEqual(packet['original_goal'].encode('utf-8'), prompt.read_bytes())
+        self.assertEqual(planning['original_goal'], exact)
         self.assertEqual(self.call('next', '--run-dir', run)['original_goal'], exact)
 
 

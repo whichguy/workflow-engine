@@ -16,7 +16,6 @@ import tempfile
 import unittest
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "skills" / "workflow" / "scripts" / "workflow"
 EXAMPLES = ROOT / "examples"
@@ -74,25 +73,61 @@ class PromptExampleTests(unittest.TestCase):
         self.assertIsInstance(packet, dict)
         return packet
 
-    def fixture_paths(self, recipe: str) -> tuple[Path, Path, Path]:
+    def fixture_paths(self, recipe: str) -> tuple[Path, Path, Path, Path]:
         request = EXAMPLES / f"{recipe}.request.txt"
+        specification = PLANS / f"{recipe}.spec.json"
         plan = PLANS / f"{recipe}.plan.json"
         bindings = PLANS / f"{recipe}.bindings.json"
-        for path in (request, plan, bindings):
+        for path in (request, specification, plan, bindings):
             self.assertTrue(path.is_file(), path)
-        return request, plan, bindings
+        return request, specification, plan, bindings
+
+    def accept_specification(
+        self, packet: dict[str, Any], specification: dict[str, Any]
+    ) -> dict[str, Any]:
+        spec_file = Path(str(packet["spec_file"]))
+        spec_file.parent.mkdir(parents=True, exist_ok=True)
+        spec_file.write_text(json.dumps(specification), encoding="utf-8")
+        callback = list(packet["next_argv"])
+        self.assertEqual(packet["allowed_operations"]["accept_spec"], callback)
+        self.assertEqual(callback[-2], "--spec")
+        self.assertEqual(callback[-1], str(spec_file))
+        completed = subprocess.run(
+            [str(argument) for argument in callback],
+            cwd=self.base,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            capture_output=True,
+            timeout=90,
+            check=False,
+        )
+        self.assertTrue(completed.stdout.strip(), completed.stderr)
+        accepted = json.loads(completed.stdout)
+        self.assertEqual(completed.returncode, 0, accepted)
+        self.assertIsInstance(accepted, dict)
+        return accepted
 
     def init_prompt(self, recipe: str) -> tuple[dict[str, Any], Path, Path, Path, Path]:
-        request, plan, bindings = self.fixture_paths(recipe)
+        source_request, source_specification, source_plan, source_bindings = self.fixture_paths(recipe)
+        request = self.base / f"{recipe}.request.txt"
+        plan = self.base / f"{recipe}.plan.json"
+        bindings = self.base / f"{recipe}.bindings.json"
+        request.write_bytes(source_request.read_bytes())
         expected_request = request.read_bytes().decode("utf-8")
-        authored_plan = json.loads(plan.read_text(encoding="utf-8"))
+        authored_specification = json.loads(source_specification.read_text(encoding="utf-8"))
+        authored_plan = json.loads(source_plan.read_text(encoding="utf-8"))
+        authored_bindings = json.loads(source_bindings.read_text(encoding="utf-8"))
+        self.assertEqual(authored_specification["goal"], expected_request)
         self.assertEqual(
             authored_plan["goal"],
             expected_request,
             "the authored Backchain plan must preserve the paired request verbatim",
         )
+        for step in authored_plan["steps"]:
+            self.assertIn("contract", authored_bindings[step["id"]])
         run_dir = self.base / f"{recipe}-run"
-        packet = self.call(
+        specification_packet = self.call(
             "init",
             "--prompt-file",
             request,
@@ -102,6 +137,12 @@ class PromptExampleTests(unittest.TestCase):
             self.repo,
             "--run-dir",
             run_dir,
+        )
+        plan.write_text(json.dumps(authored_plan), encoding="utf-8")
+        bindings.write_text(json.dumps(authored_bindings), encoding="utf-8")
+        packet = self.accept_specification(
+            specification_packet,
+            authored_specification,
         )
         self.assertEqual(packet["kind"], "planning")
         self.assertEqual(packet["original_goal"], expected_request)

@@ -1,7 +1,9 @@
 # Recipe lab
 
-Each recipe uses local files only. Start with a fresh workspace/run pair; preserve
-that run for recovery. Commands below run from the repository root.
+Each recipe uses local files only and is a workflow-document v2: its inline
+specification names functional requirements/NFRs, and each step carries an atomic
+deliverable or scoped shared-work contract. Start with a fresh workspace/run pair;
+preserve that run for recovery. Commands below run from the repository root.
 
 ```sh
 DEMO=$(mktemp -d)
@@ -15,7 +17,7 @@ mkdir "$DEMO/workspace"
 | Relay (`serial`) | numbers.csv → report.json → verification.txt | `tests/test_engine.py` |
 | Diamond | Join receives both suppliers' receipts | `tests/test_engine.py` |
 | Braid | extract/classify → consolidate → compose/check → publish (local file only) | `tests/test_graph_shapes.py` |
-| Confetti | Both terminal note callbacks are required, including after one fails/retries | `tests/test_graph_shapes.py` |
+| Confetti | Both terminal note callbacks are required, including after one fails/retries; no synthetic finish join | `tests/test_graph_shapes.py` |
 | Tributaries | Independent leaf, two roots, uneven paths, intentionally scrambled declaration order | `tests/test_graph_shapes.py` |
 | Native Braid | Two agents active together in each round; command joins wait for both | `tests/test_frontier.py` |
 | Loom | Overlapping diamonds join, fork into two leaves, and wait for a separate root leaf | `tests/test_generated_graphs.py` |
@@ -33,14 +35,18 @@ Commands and prompt steps remain exclusive even in a concurrent run.
 
 ## Prompt entry
 
-Each larger example has a paired `.request.txt`. Use `init --prompt-file` with
-an explicitly selected `--backchain-root`. That yields a durable planning packet;
-the host performs Backchain planning and submits plan/bindings via `accept-plan`.
+`braid` and `confetti` have paired `.request.txt` files plus a reviewed
+`plans/<recipe>.spec.json` companion. Use `init --prompt-file` with an explicitly
+selected `--backchain-root`. It first yields a durable specification packet; write
+or copy the reconciled specification to the exact packet `spec_file`, then submit
+its `accept-spec` callback. Only then does the host perform Backchain planning and
+submit plan/bindings via `accept-plan`.
 
-`tests/test_prompt_examples.py` runs these paths with authored fixture plans and
-the real Backchain packager. It checks imported edges and accepted terminal results.
-Those fixtures prove the adapter contract, not model planning quality. The prior
-native planning pilot is documented in `docs/VALIDATION.md`.
+`tests/test_prompt_examples.py` runs these paths with authored specification,
+plan, and binding fixtures through the real Backchain packager. It checks source
+goal identity, imported edges, requirement contracts, and accepted terminal
+results. Those fixtures prove the adapter contract, not model planning quality.
+The prior native planning pilot is documented in `docs/VALIDATION.md`.
 
 ## Focused checks
 
