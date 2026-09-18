@@ -56,14 +56,42 @@ or packet-integrity defect; its remaining materialization drift was corrected
 before this passing suite. The initial implementation review's findings and
 resulting regression cases are described above.
 
-A separate live prompt/specification/Backchain/Until Loop pilot is recorded
-independently from the hermetic and authored-fixture claims.
+## Live prompt-to-specification pilot
+
+A native Codex agent interpreted a fresh CSV-artifact prompt, drafted and froze
+the specification/NFRs, and planned through the selected Backchain and Until Loop
+skills. Until Loop returned an actual terminal receipt after two distinct
+trivial whole-plan reviews. The exact unchanged candidate then passed the real
+Backchain package-only validator before Weave executed it.
+
+The resulting graph was `S1 → {S2,S3} → S4 → {S5,S6}`: stage a canonical CSV;
+independently produce integer-cent totals and a Markdown summary; join both in a
+hash manifest; then finish with two required verification leaves. All six steps
+received accepted receipts. The three source rows totaled **1,100 cents** in
+both outputs. An independent parent check recomputed the arithmetic, matched
+artifact and receipt hashes, and cold-loaded `complete` without changing state.
+The [pilot receipt](evidence/specification-native-pilot.json) records identities,
+source phases, outcomes, and the retained local evidence directory.
+
+This pilot used serial command execution. It proves the model-generated
+prompt/specification/planning path and execution of that particular graph;
+parallel worker execution is a separate claim. Planning began while local Weave
+documentation was changing. The final card and planning reference were reread
+before structural acceptance and execution, and their hashes match the released
+payload. This was not a fresh installed immutable-source pilot. Two corrected
+read-only verification-helper assumptions are recorded in the receipt; neither
+changed the candidate or execution artifacts.
 
 ## Reference re-audit
 
-The selected Backchain checkout remained at `ea2d040`; its skill, caller contract,
-and convergence reference had no drift. Its actual Until Loop binding remains
-the convergence authority. The spec and NFRs enter the source-aware caller
+At the initial re-audit the selected Backchain checkout was `ea2d040`; its skill,
+caller contract, and convergence reference had no drift from the earlier audit.
+The later live pilot used clean commit `1a7e6f6`. The intervening commits added
+the separate Plan Dispatcher package; the selected Backchain skill, caller and
+convergence contracts, packaging harness, and plan schema were byte-identical.
+No Weave adapter change was needed, and Plan Dispatcher was not added to the
+execution path. The actual selected Until Loop binding remains the convergence
+authority. The spec and NFRs enter the source-aware caller
 companion; execution contracts stay outside Backchain's closed plan JSON.
 
 The current local ShipLoop source was a dirty partial 0.16 draft, not a strict

@@ -3,7 +3,44 @@
 The public repository is `whichguy/workflow-engine`. The portable plugin and skill
 identifier is `workflow`; the display name and checkout alias are Weave.
 
-## Published release
+## Current release: 0.3.0
+
+[workflow-v0.3.0](https://github.com/whichguy/workflow-engine/releases/tag/workflow-v0.3.0)
+is published at `2754ab3c27204be1a25f8f4416098bb58096d3fa`. It adds mandatory
+specification/NFR contracts for new inputs while preserving old persisted runs.
+[Source PR 1](https://github.com/whichguy/workflow-engine/pull/1) and
+[marketplace PR 3](https://github.com/whichguy/skill-craft-market/pull/3) are merged.
+The marketplace promotion is `e29f5bb57b88af402ccf602e0b058b3288830851`.
+
+All 133 local tests passed, including the selected real Backchain packager.
+The source PR and merged-main CI passed all four macOS/Linux Python 3.10/3.13
+jobs; public CI passed 119 cases and explicitly skipped 14 private Backchain
+integration cases. Strict marketplace verification checked the changed entry's
+complete payload and exact tag/commit binding with no failures or advisories;
+53 marketplace unit tests and PR/main CI passed.
+
+A fresh Claude Code profile installed 0.3.0 from the public Git catalog. All
+13 package files matched the qualified payload. Its installed helper completed
+Relay (`count: 3`, `sum: 10`) with three spec-linked receipts, and cold recovery
+left state unchanged. The recorded normal-profile guard was unchanged. The
+owned disposable profile was removed afterward; its path in the receipt is
+historical, while workspace/output/run evidence remains. No model was called
+by this installation check. This update did not repeat a fresh Codex CLI
+installation; the common generated payload and relocated-package tests passed.
+
+[Local suite hashes](evidence/specification-suite.json),
+[publication receipt](evidence/specification-publication.json),
+[public consumer receipt](evidence/specification-public-consumer.json), and
+[specification validation](SPECIFICATION-VALIDATION.md) keep these claims
+separate from model-generated planning evidence.
+
+The separate [native prompt pilot](evidence/specification-native-pilot.json)
+completed a model-generated specification and plan with actual selected Until
+Loop convergence, real Backchain packaging, six accepted command receipts, and
+two required terminal leaves. It used local sources and serial execution; its
+receipt records the source changes during planning.
+
+## Previous qualification: 0.2.0
 
 `workflow-v0.2.0` is published at `eb8895589afdd177eb096cc18f2b543b030012a9`.
 Its runtime and package bytes match the qualified `219e290` candidate. The

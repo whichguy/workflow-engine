@@ -1,0 +1,22 @@
+{
+  "host": "Claude Code",
+  "fresh_profile": true,
+  "marketplace_source": "whichguy/skill-craft-market",
+  "marketplace_commit": "e29f5bb57b88af402ccf602e0b058b3288830851",
+  "workflow_source_commit": "2754ab3c27204be1a25f8f4416098bb58096d3fa",
+  "version": "0.3.0",
+  "payload_files_match": 13,
+  "recipe": "Relay",
+  "terminal_status": "complete",
+  "report": {
+    "count": 3,
+    "sum": 10
+  },
+  "receipts": 3,
+  "specification_sha256": "021cd7522fd2f063270dc0b98b72b57828519d1362ea8b32d7f5be681a09f74a",
+  "cold_recovery_unchanged": true,
+  "normal_profile_guard_unchanged": true,
+  "model_execution": false,
+  "profile_cleanup": "owned disposable profile removed after retaining qualification; workspace/run remain",
+  "profile_path_historical": "/Users/dadleet/src/workflow-engine/.runs/specification-release/public-consumer/claude-profile"
+}

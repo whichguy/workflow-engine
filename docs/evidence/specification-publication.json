@@ -1,0 +1,34 @@
+{
+  "date": "2026-09-18",
+  "version": "0.3.0",
+  "tag": "workflow-v0.3.0",
+  "source_commit": "2754ab3c27204be1a25f8f4416098bb58096d3fa",
+  "source_merge_commit": "d9ee1b17b6ee9e4473248e5d9bb3d301e5e2667e",
+  "marketplace_commit": "e29f5bb57b88af402ccf602e0b058b3288830851",
+  "release_url": "https://github.com/whichguy/workflow-engine/releases/tag/workflow-v0.3.0",
+  "source_pr": "https://github.com/whichguy/workflow-engine/pull/1",
+  "marketplace_pr": "https://github.com/whichguy/skill-craft-market/pull/3",
+  "ci": {
+    "source_pr": "https://github.com/whichguy/workflow-engine/actions/runs/35390747107",
+    "source_main": "https://github.com/whichguy/workflow-engine/actions/runs/35390962729",
+    "marketplace_pr": "https://github.com/whichguy/skill-craft-market/actions/runs/35391320266",
+    "marketplace_main": "https://github.com/whichguy/skill-craft-market/actions/runs/35391431265"
+  },
+  "source_ci_per_matrix": {
+    "selected": 133,
+    "passed": 119,
+    "skipped_private_backchain": 14,
+    "failed": 0
+  },
+  "local_suite": {
+    "selected": 133,
+    "passed": 133,
+    "skipped": 0
+  },
+  "marketplace_unit_tests_passed": 53,
+  "strict_payload_failures": 0,
+  "strict_payload_advisories": 0,
+  "anonymous_manifest_http_status": 200,
+  "fresh_consumer": "specification-public-consumer.json",
+  "normal_profiles_installed_or_refreshed": false
+}

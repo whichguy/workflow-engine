@@ -1,0 +1,145 @@
+{
+  "date": "2026-09-18",
+  "pilot": "specification-pilot-20260918",
+  "host": "Codex native agent",
+  "entry": "prompt -> frozen specification and NFRs -> selected Backchain and Until Loop -> execution",
+  "result": "complete",
+  "run_id": "680c61878e984fdc99c2703c4656381b",
+  "runtime_source_commit": "2754ab3c27204be1a25f8f4416098bb58096d3fa",
+  "source_at_structural_acceptance": "d9ee1b17b6ee9e4473248e5d9bb3d301e5e2667e",
+  "source_phase_boundary": "Initial prompt/spec planning began during local documentation edits. Final card/reference were reread before accept-plan and execution; their hashes match the released payload. This was not a fresh installed immutable-source pilot.",
+  "source_sha256": {
+    "skills/workflow/SKILL.md": "b6a61be9268faed7e5ead6fa4908cb997ccf3593ba1862a225f977a1a130586e",
+    "skills/workflow/references/planning.md": "31a2d215db763e4b6ef661ac0fa815e423b19b3ab0e80cec822480ecc2c4782f",
+    "skills/workflow/scripts/specification.py": "e35df0ccc937f512bb24e24a9c132347c2cecd97a88638573a2f42f94be95bda",
+    "skills/workflow/scripts/workflow_core.py": "e780414e3e667faa3df336c86de8d472ab40642e6e780001e6feb688ea405d74",
+    "skills/workflow/scripts/adapters.py": "bb05659758e6b7818e3c2b5b07abb8d527f6e934fbf9a7a3f0909df5b999f48b",
+    "skills/workflow/scripts/workflow": "fff227746c3a10d45f80f7a8bb830f16eb726b906d91711bd129ed9727c30e57"
+  },
+  "semantic_convergence": {
+    "selected_until_loop_status": "complete",
+    "distinct_trivial_reviews": 2,
+    "candidate_sha256": "8399fb3f314c86fc815f633dc4afe8f68152af9c6cffe91074e5ba772985799d",
+    "terminal_receipt_sha256": "a5f3eb9b58b3ca54356cf0ffc9adceaaf313e2f1ce798898f7b1e61f8ed54b6f",
+    "companion_sha256": "25dce9e1b5b88e126f4a2976ab7e6f93f2fdc95cdf7e92e3c3fe35072eb6b4db",
+    "selected_until_loop": {
+      "version": "0.4.0-rc.2",
+      "commit": "d10d5f6a49c12dec8dfe436e26271d6e449a6366",
+      "source": "separately selected clean local checkout",
+      "sha256": {
+        "SKILL.md": "609959649f69f3ee5408bedbd6331806799495a8f59418e8d097c3d9f3c08028",
+        "references/runtime-ephemeral.md": "8d59ea1b8dcbabc6cffbe333dbe60ec638aa9f2ecab6a9cd4c1891ded8f058bb",
+        "scripts/until_loop_ephemeral.py": "6a4131f8a70b56a361556fbc61e924f060ebf1ba5d5f1387a6d6d735e89b4212"
+      }
+    }
+  },
+  "structural_validation": {
+    "adapter": "backchain-package-only/v1",
+    "backchain_commit": "1a7e6f6e8b2e79d1c1420928a18b22d9b4fb5dd0",
+    "source_dirty_at_validation": false,
+    "validation_structure_ok": true,
+    "completion_status": "complete",
+    "unresolved_count": 0,
+    "waves": [
+      [
+        "S1"
+      ],
+      [
+        "S2",
+        "S3"
+      ],
+      [
+        "S4"
+      ],
+      [
+        "S5",
+        "S6"
+      ]
+    ]
+  },
+  "execution": {
+    "policy": "serial",
+    "kinds": [
+      "command"
+    ],
+    "completed_steps": [
+      "S1",
+      "S2",
+      "S3",
+      "S4",
+      "S5",
+      "S6"
+    ],
+    "terminal_leaves": [
+      "S5",
+      "S6"
+    ],
+    "receipt_sha256": {
+      "S1": "45e4ccf1d6e977a8adbcb02638f3dfd1d5b7f59fb3bee21fd1fbceb853b8b6a2",
+      "S2": "127773d59eeeb9f544d6edf90f44fc62c002afe7ca9815ef252b832856d46027",
+      "S3": "e760a7b6f4cc403141d7ff35d6d2232d24b0b1daae80891836473518a063156e",
+      "S4": "2016f018ccbfa7d9eb6ebf84b948516afe293c8276df3ed68b3ae73805c6424d",
+      "S5": "050a46ec1a07e27cb1404de5a35afd41b94ca024306f4a12133d4df6c993efa9",
+      "S6": "29cdbff78f91576026bafeab1c74284f60a42c1f3afb22bcde4a92a082f7555c"
+    },
+    "cold_next_status": "complete",
+    "cold_next_state_unchanged": true
+  },
+  "specification": {
+    "sha256": "45c917cf8be0354a07218ec9173e11e037b2468c60c07d388356755d7fd1451c",
+    "artifacts": {
+      "requirements/spec.md": "8614ccee59dfdcd259fa0c56c33a7845463e151c5e871c5d841d4057250f1c8e",
+      "requirements/nfrs.md": "eca4f27f900e6b8292f04d56b73282f3af7c09f27677dd09e7b1d26ee4940ffd"
+    }
+  },
+  "input": {
+    "csv_rows": 3,
+    "sha256": "c48b7cc3471cc6b7064c6b5a884498646a6053973e541b5881126f511ed348ea"
+  },
+  "result_artifacts": {
+    "grand_total_cents": 1100,
+    "manifest_hashes_verified": true,
+    "both_terminal_checks_passed": true,
+    "sha256": {
+      "artifacts/input.csv": "c48b7cc3471cc6b7064c6b5a884498646a6053973e541b5881126f511ed348ea",
+      "artifacts/totals.json": "c96cd925feccadd35ae0a87d7026d5b94f244e2345d1d9be613f61614d75ed39",
+      "artifacts/summary.md": "18e47aace3cd276228db4a52f30b867083699ba6e9450654dbd3c8fbf2a00e7e",
+      "artifacts/manifest.json": "6b033e40522f63722ea6fa17ad889279af528148b47fa2f676aad9b4705c9c10",
+      "evidence/totals-check.json": "418d16bc151b2dc7c444d980362ea8230660f39f8b2d7e0399c8855340046aa9",
+      "evidence/summary-manifest-check.json": "cd3294fedba87a877fca42761673ab576f83e5fd68ddc9d85f46fd32c519823a"
+    }
+  },
+  "independent_parent_checks": [
+    "recomputed CSV total with decimal arithmetic",
+    "matched all artifact and accepted receipt hashes",
+    "verified both required terminal leaves accepted",
+    "cold-loaded complete state without mutation",
+    "matched 13 released payload file hashes"
+  ],
+  "observed_errors": [
+    {
+      "stage": "manual preflight graph reader",
+      "classification": "structural review-tooling",
+      "observation": "An initial read-only helper assumed an obsolete top-level plan wrapper and raised KeyError. No workflow artifact or candidate was changed; the helper was corrected to the actual Backchain plan schema and its topology assertions passed."
+    },
+    {
+      "stage": "manual final provenance reader",
+      "classification": "structural review-tooling",
+      "observation": "An initial read-only helper compared completionStatus as an exact two-field object and raised AssertionError because the real validator supplies additional fields. The required fields were checked directly in the corrected pass."
+    }
+  ],
+  "retained_local_evidence": ".runs/specification-pilot-20260918/",
+  "boundaries": [
+    "One model-generated planning case; not a general semantic-quality benchmark.",
+    "Dependency branches were preserved; command execution was serial.",
+    "Selected convergence receipts represent the host reviews; the kernel validates structural coverage and order.",
+    "Raw local evidence is retained outside Git; no dependent skill bodies are published."
+  ],
+  "reference_compatibility": {
+    "initial_backchain_audit": "ea2d040",
+    "pilot_backchain_commit": "1a7e6f6e8b2e79d1c1420928a18b22d9b4fb5dd0",
+    "weave_relevant_blobs_unchanged": true,
+    "range_change": "Separate Plan Dispatcher package added; not used by Weave acceptance.",
+    "weave_adapter_change_required": false
+  }
+}
